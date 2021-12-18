@@ -15,7 +15,7 @@ def importWorkspace(wspace, wsfilename_import, rename):
     getattr(wspace, 'import')(model_import, RooFit.RenameAllVariablesExcept(rename, 'x'), RooFit.RenameAllNodes(rename))
     return wspace
 
-def createWorkspace(wsname, wsfilename, wsfilename_tar, wsfilename_norm, n_norm=0.0, dn_norm=0.0, eff_tar=0.0, deff_tar=0.0, eff_norm=0.0, deff_norm=0.0):
+def createWorkspace(wsname, wsfilename, wsfilename_tar, wsfilename_norm, eff_tar=0.0, deff_tar=0.0, eff_norm=0.0, deff_norm=0.0):
     wspace = rt.RooWorkspace(wsname)
     wspace = importWorkspace(wspace, wsfilename_tar, 'tar')
     wspace = importWorkspace(wspace, wsfilename_norm, 'norm')
@@ -36,7 +36,7 @@ def createWorkspace(wsname, wsfilename, wsfilename_tar, wsfilename_norm, n_norm=
               ('eff_hat_norm', eff_norm,   0,   1),
               ('deff_norm',   deff_norm,   0,   1),
     # nuisance parameters
-              ('n_norm',         n_norm,   0,  20000),
+              ('n_norm',           9000,   0,  20000),
               ('eff_tar',       eff_tar,   0,  1),
               ('eff_norm',     eff_norm,   0,  1),
     # parameter of interest
@@ -91,9 +91,22 @@ def createWorkspace(wsname, wsfilename, wsfilename_tar, wsfilename_norm, n_norm=
     wspace.factory("SIMUL:jointModel(cat,tar=model_tar_modified,norm=model_norm_modified)")
     wspace.factory('PROD::model({},{})'.format(prodpdf, 'jointModel'))
 
+    nuis_excluded = ['x', 'R', 'cat', 'deff_norm', 'deff_tar', 'eff_hat_norm', 'eff_hat_tar']
+    nuis = []
+    params = wspace.pdf('model').getVariables()
+    params_iter = params.createIterator()
+    param = params_iter.Next()
+    while param :
+      if param.GetName() not in nuis_excluded:
+        nuis.append(param.GetName())
+      param = params_iter.Next()
+    nuis = ','.join(nuis)
+
     sets = [('obs',  'x'),           # observations
             ('poi',  'R'),          # parameter of interest
-            ('nuis', 'n_norm,eff_tar,eff_norm')] # nuisance parameters (leave no spaces)
+            ('nuis', nuis)] # nuisance parameters (leave no spaces)
+            #('nuis', 'n_norm,eff_tar,eff_norm')] # nuisance parameters (leave no spaces)
+
     for t in sets:
         name, parlist = t
         wspace.defineSet(name, parlist)
@@ -134,7 +147,7 @@ def analyzeWorkspace(wsname, wsfilename, R_SM=None):
     #-----------------------------------------------------    
     # Fit model to data
     #-----------------------------------------------------
-    results = wspace.pdf('model').fitTo(data, RooFit.Extended(True), rt.RooFit.Save())
+    results = wspace.pdf('model').fitTo(data, RooFit.Extended(True), rt.RooFit.Save(), RooFit.NumCPU(8))
     results.Print()
     
     #-----------------------------------------------------    
@@ -226,8 +239,6 @@ def analyzeWorkspace(wsname, wsfilename, R_SM=None):
 
 if __name__ == "__main__":
 
-    N = 753.36
-    n_norm, dn_norm = 8616.26, 147.97
     eff_tar, deff_tar = 0.03430, 0.00024
     eff_norm, deff_norm = 0.03680, 0.00023
     R_SM = 0.0812
@@ -236,7 +247,7 @@ if __name__ == "__main__":
     wsfilename_norm = 'wspace_jpsi_fixedPartial_pf_wp5.0.root'
     wsfilename = 'wspace_rpsi2s_electron.root'
 
-    createWorkspace('R_psi2s', wsfilename, wsfilename_tar, wsfilename_norm, n_norm=n_norm, dn_norm=dn_norm, eff_tar=eff_tar, deff_tar=deff_tar, eff_norm=eff_norm, deff_norm=deff_norm)
+    createWorkspace('R_psi2s', wsfilename, wsfilename_tar, wsfilename_norm, eff_tar=eff_tar, deff_tar=deff_tar, eff_norm=eff_norm, deff_norm=deff_norm)
     plccanvas = analyzeWorkspace('R_psi2s', wsfilename, R_SM=R_SM)
 
 
