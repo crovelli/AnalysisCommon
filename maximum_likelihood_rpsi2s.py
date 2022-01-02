@@ -2,18 +2,10 @@ import os,sys,re
 from time import sleep
 import math
 import ROOT as rt
+from ROOT import RooFit
 rt.gROOT.SetBatch(True);
 rt.gROOT.SetStyle("Plain");
-from plotting import *
-
-def importWorkspace(wspace, wsfilename_import, rename):
-    wsfile_import = rt.TFile.Open(wsfilename_import)
-    wspace_import = wsfile_import.Get('wspace')
-    data_import = wspace_import.data('data')
-    getattr(wspace, 'import')(data_import, rt.RooCmdArg(RooFit.Rename('data_{}'.format(rename))))
-    model_import = wspace_import.pdf('model')
-    getattr(wspace, 'import')(model_import, RooFit.RenameAllVariablesExcept(rename, 'x'), RooFit.RenameAllNodes(rename))
-    return wspace
+from utils_likelihood import analyzeWorkspace, plot_likelihood, importWorkspace 
 
 def createWorkspace(wsname, wsfilename, wsfilename_ele_psi2s, wsfilename_ele_jpsi, wsfilename_mu_psi2s, wsfilename_mu_jpsi,
                     eff_ele_psi2s=0.0, deff_ele_psi2s=0.0, eff_ele_jpsi=0.0, deff_ele_jpsi=0.0,
@@ -28,10 +20,10 @@ def createWorkspace(wsname, wsfilename, wsfilename_ele_psi2s, wsfilename_ele_jps
 
     wspace.factory('cat[ele_psi2s,ele_jpsi,mu_psi2s,mu_jpsi]')
     x = wspace.var("x")
-    data = ROOT.RooDataSet('data', 'data', rt.RooArgSet(x), RooFit.Index(wspace.cat('cat')), 
-                           RooFit.Import('ele_psi2s', wspace.data('data_ele_psi2s')), RooFit.Import('ele_jpsi', wspace.data('data_ele_jpsi')), 
-                           RooFit.Import('mu_psi2s', wspace.data('data_mu_psi2s')), RooFit.Import('mu_jpsi', wspace.data('data_mu_jpsi')),
-                           )
+    data = rt.RooDataSet('data', 'data', rt.RooArgSet(x), RooFit.Index(wspace.cat('cat')), 
+                         RooFit.Import('ele_psi2s', wspace.data('data_ele_psi2s')), RooFit.Import('ele_jpsi', wspace.data('data_ele_jpsi')), 
+                         RooFit.Import('mu_psi2s', wspace.data('data_mu_psi2s')), RooFit.Import('mu_jpsi', wspace.data('data_mu_jpsi')),
+                         )
     getattr(wspace, 'import')(data, rt.RooCmdArg())
 
     br_jpsi_ee, dbr_jpsi_ee= 0.05971, 0.00032 
@@ -68,19 +60,19 @@ def createWorkspace(wsname, wsfilename, wsfilename_ele_psi2s, wsfilename_ele_jps
               ('br_hat_psi2s_mumu',   br_psi2s_mumu,  1.e-6,   1),
               ('dbr_psi2s_mumu',      dbr_psi2s_mumu, 1.e-6,   1),
     # nuisance parameters
-              ('n_ele_jpsi',          9000,           1.e-6,   20000),
-              ('eff_ele_psi2s',       eff_ele_psi2s,  1.e-6,   1),
-              ('eff_ele_jpsi',        eff_ele_jpsi,   1.e-6,   1),
-              ('br_psi2s_ee',         br_psi2s_ee,    1.e-6,   1),
-              ('br_jpsi_ee',          br_jpsi_ee,     1.e-6,   1),
-              ('n_mu_jpsi',           9000,           1.e-6,   20000),
-              ('eff_mu_psi2s',        eff_mu_psi2s,   1.e-6,   1),
-              ('eff_mu_jpsi',         eff_mu_jpsi,    1.e-6,   1),
-              ('br_psi2s_mumu',       br_psi2s_mumu,  1.e-6,   1),
-              ('br_jpsi_mumu',        br_jpsi_mumu,   1.e-6,   1),
+              ('n_ele_jpsi',          8617,           8000,    10000),
+              ('eff_ele_psi2s',       eff_ele_psi2s,  eff_ele_psi2s-5.0*deff_ele_psi2s,   eff_ele_psi2s+5.0*deff_ele_psi2s),
+              ('eff_ele_jpsi',        eff_ele_jpsi,   eff_ele_jpsi-5.0*deff_ele_jpsi,     eff_ele_jpsi+5.0*deff_ele_jpsi),
+              ('br_psi2s_ee',         br_psi2s_ee,    br_psi2s_ee-5.0*dbr_psi2s_ee,       br_psi2s_ee+5.0*dbr_psi2s_ee),
+              ('br_jpsi_ee',          br_jpsi_ee,     br_jpsi_ee-5.0*dbr_jpsi_ee,         br_jpsi_ee+5.0*dbr_jpsi_ee),
+              ('n_mu_jpsi',           8617,           8000,    10000),
+              ('eff_mu_psi2s',        eff_mu_psi2s,   eff_mu_psi2s-5.0*deff_mu_psi2s,     eff_mu_psi2s+5.0*deff_mu_psi2s),
+              ('eff_mu_jpsi',         eff_mu_jpsi,    eff_mu_jpsi-5.0*deff_mu_jpsi,       eff_mu_jpsi+5.0*deff_mu_jpsi),
+              ('br_psi2s_mumu',       br_psi2s_mumu,  br_psi2s_mumu-5.0*dbr_psi2s_mumu,   br_psi2s_mumu+5.0*dbr_psi2s_mumu),
+              ('br_jpsi_mumu',        br_jpsi_mumu,   br_jpsi_mumu-5.0*dbr_jpsi_mumu,     br_jpsi_mumu+5.0*dbr_jpsi_mumu),
     # parameter of interest
-              ('r_br',                0.7,            0.5,     1.1),
-              ('R',                   1.0,            0.5,     2),
+              ('r_br',                0.7,            0.3,     1.5),
+              ('R',                   1.0,            0.5,     1.5),
               ]
 
     for t in params:
@@ -149,19 +141,31 @@ def createWorkspace(wsname, wsfilename, wsfilename_ele_psi2s, wsfilename_ele_jps
                      'deff_mu_jpsi', 'deff_mu_psi2s', 'eff_hat_mu_jpsi', 'eff_hat_mu_psi2s', 
                      'dbr_jpsi_mumu', 'dbr_psi2s_mumu', 'br_hat_jpsi_mumu', 'br_hat_psi2s_mumu'
                      ]
+
+    ### Define global observables
+    ### they are not being fitted and they are not loaded from a dataset, 
+    ### but some knowledge exists that allows to set them to a specific value
+    ### Global Observables are generated once per toy
+    globs = ['eff_ele_psi2s', 'eff_ele_jpsi', 'br_psi2s_ee', 'br_jpsi_ee',
+             'eff_mu_psi2s', 'eff_mu_jpsi', 'br_psi2s_mumu', 'br_jpsi_mumu',
+             ]
+
     nuis = []
     params = wspace.pdf('model').getVariables()
     params_iter = params.createIterator()
     param = params_iter.Next()
     while param :
-      if param.GetName() not in nuis_excluded:
+      if param.GetName() not in (nuis_excluded+globs):
         nuis.append(param.GetName())
       param = params_iter.Next()
     nuis = ','.join(nuis)
+    globs = ','.join(globs)
 
-    sets = [('obs',  'x'),           # observations
-            ('poi',  'R'),          # parameter of interest
-            ('nuis', nuis)] # nuisance parameters (leave no spaces)
+    sets = [('obs',   'x'),           # observations
+            ('poi',   'R'),          # parameter of interest
+            ('nuis',  nuis), # nuisance parameters (leave no spaces)
+            ('globs', globs),
+            ]
             #('nuis', 'n_ele_jpsi,eff_ele_psi2s,eff_ele_jpsi')] # nuisance parameters (leave no spaces)
 
     for t in sets:
@@ -178,6 +182,7 @@ def createWorkspace(wsname, wsfilename, wsfilename_ele_psi2s, wsfilename_ele_jps
     cfg.SetPdf(wspace.pdf('model'))
     cfg.SetParametersOfInterest(wspace.set('poi'))
     cfg.SetNuisanceParameters(wspace.set('nuis'))
+    cfg.SetGlobalObservables(wspace.set('globs'))
 
     # import model configuration into workspace
     getattr(wspace, 'import')(cfg)
@@ -187,113 +192,6 @@ def createWorkspace(wsname, wsfilename, wsfilename_ele_psi2s, wsfilename_ele_jps
     # write out workspace
     wspace.writeToFile(wsfilename)
 
-def analyzeWorkspace(wsname, wsfilename, R_SM=None):
-
-    # Open workspace file
-    wsfile = rt.TFile.Open(wsfilename)
-
-    # Get workspace
-    wspace = wsfile.Get(wsname) 
-
-    # Get data
-    data = wspace.data('data')
-
-    # Get model configuration    
-    cfg  = wspace.obj('cfg')
-
-    #-----------------------------------------------------    
-    # Fit model to data
-    #-----------------------------------------------------
-    results = wspace.pdf('model').fitTo(data, RooFit.Extended(True), rt.RooFit.Save(), RooFit.NumCPU(8))
-    results.Print()
-    
-    #-----------------------------------------------------    
-    # Compute interval based on profile likelihood
-    #-----------------------------------------------------
-    # suppress some (apparently) innocuous warnings
-    #msgservice = rt.RooMsgService.instance()
-    #msgservice.setGlobalKillBelow(rt.RooFit.FATAL)
-       
-    R_min, R_max = 0.7, 1.1
-    NPoints = 20
-    xlabel = 'R_{#psi(2S)}'
-
-    print 'compute interval using profile likelihood'
-    plc = rt.RooStats.ProfileLikelihoodCalculator(data, cfg)
-    CL  = 0.683
-    plc.SetConfidenceLevel(CL)
-    plcInterval= plc.GetInterval()
-    lowerLimit = plcInterval.LowerLimit(wspace.var('R'))
-    upperLimit = plcInterval.UpperLimit(wspace.var('R'))
-
-    print '\tPL %4.1f%s CL interval = [%5.5f, %5.5f]' % \
-      (100*CL, '%', lowerLimit, upperLimit)
-
-    plcplot = rt.RooStats.LikelihoodIntervalPlot(plcInterval)      
-    plccanvas = rt.TCanvas('fig_PL', 'PL', 800, 600)
-    plccanvas.cd()
-    pad = setup_pad()
-    pad.Draw()
-    pad.cd()
-
-    plcplot.SetRange(R_min, R_max)
-    plcplot.SetMaximum(10)
-    plcplot.SetLineColor(9)
-    plcplot.SetNPoints(NPoints)
-    plcplot.Draw("tf1")
-
-    # compute an 95% limit on mu by
-    CL = 0.95
-    plc.SetConfidenceLevel(CL)
-    plcInterval = plc.GetInterval()
-    lowerLimit = plcInterval.LowerLimit(wspace.var('R'))
-    upperLimit = plcInterval.UpperLimit(wspace.var('R'))
-
-    print '\tPL %4.1f%s CL interval = [%5.5f, %5.5f]' % \
-      (100*CL, '%', lowerLimit, upperLimit)
-      
-    
-    pad.cd()
-    plcplot2 = rt.RooStats.LikelihoodIntervalPlot(plcInterval)
-    plcplot2.SetRange(R_min, R_max)
-    plcplot2.SetMaximum(10)
-    plcplot2.SetLineColor(8)
-    plcplot2.SetNPoints(NPoints)
-    plcplot2.Draw("tf1 same")
-    
-    frame = plcplot.GetPlottedObject()
-    frame.GetYaxis().SetTitle('Profile of -log(L/L_{min})')
-    frame.GetXaxis().SetTitle(xlabel)
-    frame.GetYaxis().SetTitleOffset(0.9)
-    frame.GetYaxis().SetTitleFont(42)
-    frame.GetYaxis().SetTitleSize(0.04)
-    frame.GetYaxis().SetLabelSize(0.04)
-    frame.GetYaxis().SetLabelFont(42)
-    frame.GetXaxis().SetTitleOffset(0.9)
-    frame.GetXaxis().SetTitleFont(42)
-    frame.GetXaxis().SetTitleSize(0.04)
-    frame.GetXaxis().SetLabelSize(0.04)
-    frame.GetXaxis().SetLabelFont(42)
-
-    pad.Update()
-    uymax = rt.gPad.GetUymax()
-    uymin = rt.gPad.GetUymin()
-    if R_SM is not None:
-      pad.cd()
-      l = rt.TLine(R_SM, uymin, R_SM, uymax)
-      l.SetLineColor(2)
-      l.SetLineWidth(2)
-      l.Draw("same")
-
-    pad.cd()
-    CMS_lumi(False)
-    plccanvas.cd()
-    plccanvas.Update()
-
-    # save canvases
-    plccanvas.Draw()
-    plccanvas.SaveAs('.pdf')
-    return plccanvas
     
 
 if __name__ == "__main__":
@@ -303,7 +201,9 @@ if __name__ == "__main__":
     eff_mu_psi2s, deff_mu_psi2s = 0.03430, 0.00024
     eff_mu_jpsi, deff_mu_jpsi = 0.03680, 0.00023
     R_SM = 1.0
-    
+    R_min, R_max = 0.8, 1.2
+    xlabel = 'R_{#psi(2S)}'
+
     wsfilename_ele_psi2s = 'wspace_psi2s_fixedPartial_pf_wp5.0.root'
     wsfilename_ele_jpsi = 'wspace_jpsi_fixedPartial_pf_wp5.0.root'
     wsfilename_mu_psi2s = 'wspace_psi2s_fixedPartial_pf_wp5.0.root'
@@ -314,6 +214,6 @@ if __name__ == "__main__":
                     eff_ele_psi2s=eff_ele_psi2s, deff_ele_psi2s=deff_ele_psi2s, eff_ele_jpsi=eff_ele_jpsi, deff_ele_jpsi=deff_ele_jpsi,
                     eff_mu_psi2s=eff_mu_psi2s, deff_mu_psi2s=deff_mu_psi2s, eff_mu_jpsi=eff_mu_jpsi, deff_mu_jpsi=deff_mu_jpsi,
                     )
-    plccanvas = analyzeWorkspace('R_psi2s', wsfilename, R_SM=R_SM)
+    plccanvas = analyzeWorkspace('R_psi2s', wsfilename, x_SM=R_SM, x_min=R_min, x_max=R_max, xlabel=xlabel, plot=True)
 
 
