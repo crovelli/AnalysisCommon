@@ -1,0 +1,85 @@
+import uproot
+import pandas as pd
+import numpy as np
+from collections import OrderedDict, defaultdict
+from scipy import interp
+from rootpy.io import root_open
+from rootpy.plotting import Hist
+from root_numpy import fill_hist, array2root, array2tree
+from root_pandas import to_root
+import itertools
+import PyPDF2
+#import makePlot_fitPeak_unbinned as fit_unbinned
+import os, sys, copy
+import xgboost as xgb
+
+LOWQ2_LOW = 1.05
+LOWQ2_UP = 2.45
+JPSI_LOW = 2.8
+JPSI_UP = 3.25
+PSI2S_LOW = 3.45
+PSI2S_UP = 3.8
+HIGHQ2_LOW = 4.0
+HIGHQ2_UP = 4.87
+
+def get_df(root_file_name, tree='mytreefit', branches=['*']):
+    print('Opening file {}...'.format(root_file_name))
+    f = uproot.open(root_file_name)
+    if len(f.allkeys()) == 0:
+        return pd.DataFrame()
+    print('Not an null file')
+    #df = uproot.open(root_file_name)["tree"].pandas.df()
+    #df = pd.DataFrame(uproot.open(root_file_name)["tree"].arrays(namedecode="utf-8"))
+    df = pd.DataFrame(f[tree].arrays(branches=branches))
+    print('Finished opening file {}...'.format(root_file_name))
+    return df
+
+if __name__ == "__main__":
+  eleType = 'pf'
+  log = 'log_psi2s_bparkPU_v7.2_{}_fixedPartial_narrowQ2Window.csv'.format(eleType)
+  info = defaultdict(dict)
+
+  br_b2psi2s = 6.24e-4
+  br_b2kstarpsi2s = 5.9e-4 * 2./3.
+
+  nparts = range(8)
+
+  info['pf']['inputfile'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_data_mvaCut0.root'
+  info['pf']['psi2s_mc'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_{}_MCPsi2S.root'.format('marker')
+  info['pf']['partial_mc'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_{}_MC_kstarpsi2s_combined.root'.format('marker')
+  info['pf']['isgn'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_0_MCPsi2S.root'
+  info['pf']['ibkg'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_samesign_mvaCut0.root'
+  info['pf']['iKstarPsi2S_BKG'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_0_MC_kstarpsi2s_combined.root'
+  info['pf']['iKstarJpsi_BKG'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_0_MC_kstarjpsi_combined.root'
+  info['pf']['iKJpsiee_BKG'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_0_MCres.root'
+  info['pf']['n_mc_psi2s'] = 483443.0
+  info['pf']['n_mc_partial'] = 439520.0
+
+  selection = {}
+
+  selection['jpsi'] = '(Mll > @JPSI_LOW) and (Mll < @JPSI_UP)'
+  selection['psi2s'] = '(Mll > @PSI2S_LOW) and (Mll < @PSI2S_UP)'
+
+  mc_branches = ['Bmass', 'Mll', 'xgb']
+
+  psi2s_mc_branches = [get_df(info[eleType]['psi2s_mc'].replace('marker', str(i)), branches=mc_branches) for i in nparts]
+  partial_mc_branches = [get_df(info[eleType]['partial_mc'].replace('marker', str(i)), branches=mc_branches) for i in nparts]
+
+
+  if eleType == 'pf':
+    mvaCut = np.linspace(4.0, 6.0, 11)
+  else:
+    mvaCut = np.linspace(8.0, 10.0, 20)
+
+  for cut in mvaCut:
+    eff_sig_bdt = np.mean([float(psi2s_mc_branches[i].query(' and '.join([selection['psi2s'], '(xgb > @cut)'])).shape[0]) / info[eleType]['n_mc_psi2s'] for i in nparts])
+    eff_partial_bdt = np.mean([float(partial_mc_branches[i].query(' and '.join([selection['psi2s'], '(xgb > @cut)'])).shape[0]) / info[eleType]['n_mc_partial'] for i in nparts])
+
+    frac_ratio = (eff_partial_bdt / eff_sig_bdt) * (br_b2kstarpsi2s / br_b2psi2s)
+
+    com = 'python KPsi2S_roofit_plb_modified_kde_fixedPartial.py -i {} -o psi2s_fixedPartial_{} --isgn={} --iKstarPsi2S_BKG={} --iKstarJpsi_BKG={} --iKJpsiee_BKG={} --ibkg={} --sel_primitive="sgn,bkg_kstarpsi2s,bkg_kstarjpsi,bkg_kjpsi_ee,bkg_comb" --fit_primitive --partial_ratio={} --mvacut={} --log={}'.format(info[eleType]['inputfile'], eleType, info[eleType]['isgn'], info[eleType]['iKstarPsi2S_BKG'], info[eleType]['iKstarJpsi_BKG'], info[eleType]['iKJpsiee_BKG'], info[eleType]['ibkg'], frac_ratio, cut, log)
+
+    os.system(com)
+
+
+
