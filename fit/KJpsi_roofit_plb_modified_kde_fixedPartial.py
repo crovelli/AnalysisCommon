@@ -69,15 +69,15 @@ def signal_fit(tree, outputfile, branches, SavePlot=True):
    print "Signal"
    wspace,dataset,bMass,theBMass = define_workspace_bmass_data("wspace_signal",branches[0],tree)
    # signal
-   wspace.factory('mean[5.278e+00, 5.25e+00, 5.3e+00]')
-   wspace.factory('width[5.8851e-02, 1.0e-6, 5.0e-1]')
-   wspace.factory('alpha1[1.85, 0.0, 10.0]')
-   wspace.factory('n1[19.9999, 0.0, 100.0]')
+   wspace.factory('mean[5.2873e+00, 5.25e+00, 5.3e+00]')
+   wspace.factory('width[5.0642e-02, 1.0e-6, 5.0e-1]')
+   wspace.factory('alpha1[8.1430e-01, 0.0, 10.0]')
+   wspace.factory('n1[9.8615e+01, 0.0, 100.0]')
    wspace.factory('CBShape::sigcb(x,mean,width,alpha1,n1)')
-   wspace.factory('mean2[5.19e+00, 5.0e+00, 5.30e+00]')
-   wspace.factory('width2[1.3367e-01, 1.0e-6, 5.0e-1]')
+   wspace.factory('mean2[5.2274e+00, 5.0e+00, 5.30e+00]')
+   wspace.factory('width2[9.3738e-02, 1.0e-6, 5.0e-1]')
    wspace.factory('RooGaussian::sigg(x,mean2,width2)')
-   wspace.factory('frac[0.5, 0, 1.0]')
+   wspace.factory('frac[4.4875e-01, 0, 1.0]')
    wspace.factory('SUM::sig(sigcb,frac*sigg)')
 
    sgnframe=theBMass.frame()
@@ -214,7 +214,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    wspace.factory('SUM::signal(cb_signal,frac*g_signal)')
 
    # other B - bkg
-   wspace.factory('exp_alpha_otherb[-1.0, -100.0, -1.e-4]')
+   wspace.factory('exp_alpha_otherb[-15.0, -100.0, -5.0]')
    wspace.factory('Exponential::exp_otherb(x,exp_alpha_otherb)')
 
    # K*Jpsi - bkg
@@ -244,11 +244,11 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
      #(wspace.var(par)).setConstant(True)
    for par in comb_parameters.keys():
      (wspace.var(par)).setVal(comb_parameters[par])
-     (wspace.var(par)).setConstant(True)
+     #(wspace.var(par)).setConstant(True)
 
    if partial_ratio is not None:
      wspace.var('frac_partial').setVal(partial_ratio)
-     wspace.var('frac_partial').setConstant(True)
+     #wspace.var('frac_partial').setConstant(True)
 
    results = model.fitTo(dataset, RooFit.Extended(True), RooFit.Save(), RooFit.Range(4.7,5.7), RooFit.PrintLevel(-1))
    print results.Print()
@@ -294,7 +294,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    legend.AddEntry(xframe.findObject("exp_comb"),"Combinatorial","l");
    legend.AddEntry(xframe.findObject("kstarjpsi"),"B -> J/#psiK*","l");
    legend.AddEntry(xframe.findObject("exp_otherb"),"Other B","l");
-   legend.AddEntry(xframe.findObject("sig"),"B -> J/#psiK","l");
+   legend.AddEntry(xframe.findObject("signal"),"B -> J/#psiK","l");
    legend.SetLineColor(ROOT.kWhite)
    legend.SetTextFont(42);
    legend.SetTextSize(0.04);
@@ -309,29 +309,32 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    print "signal",nsig_visible,"+/-", nsig_visible_err,"comb",ncomb_visible,"+/-", ncomb_visible_err,"K* J/psi", nKstarJpsi_visible, "+/-",nKstarJpsi_visible_err,"otherB", notherB_visible, "+/-",notherB_visible_err
    residuals(xframe,theBMass,"poutana")
 
-   # get likelihood
+   saveWS = False
 
-   nll = model.createNLL(dataset)
-   ROOT.RooMinuit(nll).migrad()
-   nll_frame = nsignal.frame(RooFit.Bins(30),RooFit.Range(7500.0,10000.0),RooFit.Title("LL and profileLL in nsignal")) ;
-   #nll.plotOn(nll_frame,RooFit.ShiftToZero())
-   pll = nll.createProfile(ROOT.RooArgSet(nsignal))
-   pll.plotOn(nll_frame,RooFit.LineColor(2),RooFit.ShiftToZero())
-   nll_frame.SetMinimum(0);
-   nll_frame.SetMaximum(10)
-   c2 = canvas_create(nll_frame,0.0,0.0,0.0,'nsig')
-   CMS_lumi()
-   c2.cd()
-   c2.Update()
-   c2.SaveAs('nll_'+outputfile+'.pdf')
+   if saveWS:
+     # get likelihood
 
-   wspace_output = ROOT.RooWorkspace('wspace')
-   getattr(wspace_output, "import")(model)
-   getattr(wspace_output, "import")(dataset)
-   params = model.getParameters(dataset)
-   wspace_output.saveSnapshot("nominal_values",params)
-   wspace_output.Print("V")
-   wspace_output.writeToFile('wspace_'+outputfile+'.root')
+     nll = model.createNLL(dataset)
+     ROOT.RooMinuit(nll).migrad()
+     nll_frame = nsignal.frame(RooFit.Bins(30),RooFit.Range(7500.0,10000.0),RooFit.Title("LL and profileLL in nsignal")) ;
+     #nll.plotOn(nll_frame,RooFit.ShiftToZero())
+     pll = nll.createProfile(ROOT.RooArgSet(nsignal))
+     pll.plotOn(nll_frame,RooFit.LineColor(2),RooFit.ShiftToZero())
+     nll_frame.SetMinimum(0);
+     nll_frame.SetMaximum(10)
+     c2 = canvas_create(nll_frame,0.0,0.0,0.0,'nsig')
+     CMS_lumi()
+     c2.cd()
+     c2.Update()
+     c2.SaveAs('nll_'+outputfile+'.pdf')
+
+     wspace_output = ROOT.RooWorkspace('wspace')
+     getattr(wspace_output, "import")(model)
+     getattr(wspace_output, "import")(dataset)
+     params = model.getParameters(dataset)
+     wspace_output.saveSnapshot("nominal_values",params)
+     wspace_output.Print("V")
+     wspace_output.writeToFile('wspace_'+outputfile+'.root')
 
 
    csv_header = ['cut', 'nsig_total', 'nsig_total_unc', 'nKstarJpsi_total', 'nKstarJpsi_total_unc', 'nsig', 'nbkg', 'ncomb', 'nKstarJpsi', 'notherB', 'snr', 'chi2']
@@ -381,7 +384,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     branches=["Bmass","Mll","xgb","KLmassD0"]
-    cuts = branches[2]+">"+str(args.mva)+" && 2.8<"+branches[1]+" && "+branches[1]+"<3.25" 
+    cuts = branches[2]+">"+str(args.mva)+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0"
+    cuts_samesign = branches[2]+">"+str(args.mva)+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.2"
     #cuts = branches[2]+">"+str(args.mva)+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.25" 
     #cuts = branches[2]+">"+str(args.mva)+" && 2.8<"+branches[1]+" && "+branches[1]+"<3.25" + " && " + branches[3] + ">2.0"
 
@@ -415,7 +419,7 @@ if __name__ == "__main__":
       if "bkg_comb" in args.sel_primtv:
         tree_bkg = ROOT.TChain('mytreefit')
         tree_bkg.Add(args.ibkg)
-        tree_bkg_cut=tree_bkg.CopyTree(cuts)
+        tree_bkg_cut=tree_bkg.CopyTree(cuts_samesign)
         comb_parameters = bkg_fit(tree_bkg_cut, args.outputfile+"_SameSign", branches)
         print "parameters Combinatorial BKG", comb_parameters['exp_alpha_comb']
 

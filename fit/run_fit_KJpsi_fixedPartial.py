@@ -36,7 +36,7 @@ def get_df(root_file_name, tree='mytreefit', branches=['*']):
 
 if __name__ == "__main__":
   eleType = 'pf'
-  log = 'log_jpsi_bparkPU_v7.2_{}_kstarplus.csv'.format(eleType)
+  log = 'log_jpsi_bparkPU_v7.3_{}.csv'.format(eleType)
   info = defaultdict(dict)
 
   br_b2jpsi = 1.02e-3
@@ -44,35 +44,37 @@ if __name__ == "__main__":
 
   nparts = range(8)
 
-  info['pf']['inputfile'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_data_mvaCut0.root'
-  info['pf']['jpsi_mc'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_{}_MCres.root'.format('marker')
-  info['pf']['partial_mc'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_{}_MC_kstarjpsi_combined.root'.format('marker')
-  info['pf']['isgn'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_0_MCres.root'
-  info['pf']['ibkg'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_samesign_mvaCut0.root'
-  info['pf']['iKstarJpsi_BKG'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_0_MC_kstarjpsi_combined.root'
-  info['pf']['iKstarPlusJpsi_BKG'] = 'data_PFe_v7.2/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_0_MC_kstarplusjpsi_kee.root'
+  info['pf']['inputfile'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_data_mvaCut0.root'
+  info['pf']['jpsi_mc'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_{}_MCres.root'.format('marker')
+  info['pf']['partial_mc'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_{}_MC_kstarjpsi.root'.format('marker')
+  info['pf']['isgn'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_0_MCres.root'
+  info['pf']['ibkg'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_samesign_mvaCut0.root'
+  info['pf']['iKstarJpsi_BKG'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_0_MC_kstarjpsi.root'
+  #info['pf']['iKstarPlusJpsi_BKG'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.2_0_MC_kstarplusjpsi_kee.root'
   info['pf']['n_mc_jpsi'] = 563421.0
-  info['pf']['n_mc_partial'] = 1023330.0
+  info['pf']['n_mc_partial'] = 373882.0
 
   selection = {}
 
-  selection['jpsi'] = '(Mll > @JPSI_LOW) and (Mll < @JPSI_UP)'
-  selection['psi2s'] = '(Mll > @PSI2S_LOW) and (Mll < @PSI2S_UP)'
+  selection['jpsi'] = '(Mll > 2.9) and (Mll < 3.2)'
+  selection['psi2s'] = '(Mll > 3.55) and (Mll < 3.8)'
+  selection['Dmass'] = '(KLmassD0 > 2.0)'
 
-  mc_branches = ['Bmass', 'Mll', 'xgb']
+  mc_branches = ['Bmass', 'Mll', 'xgb', 'KLmassD0']
 
   jpsi_mc_branches = [get_df(info[eleType]['jpsi_mc'].replace('marker', str(i)), branches=mc_branches) for i in nparts]
   partial_mc_branches = [get_df(info[eleType]['partial_mc'].replace('marker', str(i)), branches=mc_branches) for i in nparts]
 
 
   if eleType == 'pf':
-    mvaCut = np.linspace(3.0, 5.0, 11)
+    mvaCut = np.linspace(4.0, 6.0, 11)
+    #mvaCut = np.array([5.0, ])
   else:
     mvaCut = np.linspace(8.0, 10.0, 20)
 
   for cut in mvaCut:
-    eff_sig_bdt = np.mean([float(jpsi_mc_branches[i].query(' and '.join([selection['jpsi'], '(xgb > @cut)'])).shape[0]) / info[eleType]['n_mc_jpsi'] for i in nparts])
-    eff_partial_bdt = np.mean([float(partial_mc_branches[i].query(' and '.join([selection['jpsi'], '(xgb > @cut)'])).shape[0]) / info[eleType]['n_mc_partial'] for i in nparts])
+    eff_sig_bdt = np.mean([float(jpsi_mc_branches[i].query(' and '.join([selection['jpsi'], selection['Dmass'], '(xgb > @cut)'])).shape[0]) / info[eleType]['n_mc_jpsi'] for i in nparts])
+    eff_partial_bdt = np.mean([float(partial_mc_branches[i].query(' and '.join([selection['jpsi'], selection['Dmass'], '(xgb > @cut)'])).shape[0]) / info[eleType]['n_mc_partial'] for i in nparts])
 
     frac_ratio = (eff_partial_bdt / eff_sig_bdt) * (br_b2kstarjpsi / br_b2jpsi)
 
