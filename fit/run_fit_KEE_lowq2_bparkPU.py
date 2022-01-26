@@ -35,7 +35,7 @@ def get_df(root_file_name, tree='mytreefit', branches=['*']):
     return df
 
 if __name__ == "__main__":
-  eleType = 'pf'
+  eleType = 'mix'
   log = 'log_kee_bparkPU_v7.3_{}.csv'.format(eleType)
   info = defaultdict(dict)
 
@@ -53,6 +53,16 @@ if __name__ == "__main__":
   info['pf']['n_mc_jpsi'] = 563421.0
   info['pf']['n_mc_lowq2'] = 617615.0
 
+  info['mix']['inputfile'] = '../data/data_LowPtPF_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_data_mvaCut0.root'
+  info['mix']['nonresonant_mc'] = '../data/data_LowPtPF_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_{}_MC.root'.format('marker')
+  info['mix']['jpsi_mc'] = '../data/data_LowPtPF_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_{}_MCres.root'.format('marker')
+  info['mix']['isgn'] = '../data/data_LowPtPF_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_0_MC.root'
+  info['mix']['ikjpsi'] = '../data/data_LowPtPF_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_0_MCres.root'
+  info['mix']['ikstaree'] = '../data/data_LowPtPF_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_0_MC_kstaree.root'
+  info['mix']['jpsi_mva_wp'] = 5.0
+  info['mix']['n_data_jpsi'] = 5533.45
+  info['mix']['n_mc_jpsi'] = 563421.0
+  info['mix']['n_mc_lowq2'] = 617615.0
 
   num_mctoys = None #5000
 
@@ -90,7 +100,8 @@ if __name__ == "__main__":
     mvaCut = np.linspace(7.0, 9.0, 20)
     #mvaCut = np.array([8.0, ])
   else:
-    mvaCut = np.linspace(8.0, 10.0, 20)
+    mvaCut = np.linspace(8.5, 9.5, 20)
+    #mvaCut = np.array([9.0, ])
 
   for cut in mvaCut:
     eff_lowq2_bdt = np.mean([float(nonresonant_mc_branches[i].query(' and '.join([selection['lowq2'], '(xgb > @cut)', selection['Dmass']])).shape[0]) / float(nonresonant_mc_branches[i].query(selection['lowq2']).shape[0]) for i in nparts])

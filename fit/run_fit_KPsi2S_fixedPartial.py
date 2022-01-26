@@ -35,7 +35,7 @@ def get_df(root_file_name, tree='mytreefit', branches=['*']):
     return df
 
 if __name__ == "__main__":
-  eleType = 'pf'
+  eleType = 'mix'
   log = 'log_psi2s_bparkPU_v7.3_{}.csv'.format(eleType)
   info = defaultdict(dict)
 
@@ -49,16 +49,26 @@ if __name__ == "__main__":
 
   info['pf']['inputfile'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_data_mvaCut0.root'
   info['pf']['psi2s_mc'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_{}_MCPsi2S.root'.format('marker')
-  #info['pf']['partial_mc'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_{}_MC_kstarpsi2s.root'.format('marker')
-  info['pf']['partial_mc'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_{}_MC_kstarjpsi.root'.format('marker')
+  info['pf']['partial_mc'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_{}_MC_kstarpsi2s.root'.format('marker')
+  #info['pf']['partial_mc'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_{}_MC_kstarjpsi.root'.format('marker')
   info['pf']['isgn'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_0_MCPsi2S.root'
   info['pf']['ibkg'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_samesign_mvaCut0.root'
   info['pf']['iKstarPsi2S_BKG'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_0_MC_kstarpsi2s.root'
   info['pf']['iKstarJpsi_BKG'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_0_MC_kstarjpsi.root'
   info['pf']['iKJpsiee_BKG'] = '../data/data_PFe_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_0_MCres.root'
   info['pf']['n_mc_psi2s'] = 483443.0
-  #info['pf']['n_mc_partial'] = 439520.0
-  info['pf']['n_mc_partial'] = 373882.0
+  info['pf']['n_mc_partial'] = 439520.0
+  #info['pf']['n_mc_partial'] = 373882.0
+
+  info['mix']['inputfile'] = '../data/data_LowPtPF_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_data_mvaCut0.root'
+  info['mix']['psi2s_mc'] = '../data/data_LowPtPF_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_{}_MCPsi2S.root'.format('marker')
+  info['mix']['partial_mc'] = '../data/data_LowPtPF_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_{}_MC_kstarpsi2s.root'.format('marker')
+  info['mix']['isgn'] = '../data/data_LowPtPF_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_0_MCPsi2S.root'
+  info['mix']['iKstarPsi2S_BKG'] = '../data/data_LowPtPF_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_0_MC_kstarpsi2s.root'
+  info['mix']['iKstarJpsi_BKG'] = '../data/data_LowPtPF_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_0_MC_kstarjpsi.root'
+  info['mix']['iKJpsiee_BKG'] = '../data/data_LowPtPF_v7.3/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_0_MCres.root'
+  info['mix']['n_mc_psi2s'] = 483443.0
+  info['mix']['n_mc_partial'] = 439520.0
 
   selection = {}
 
@@ -76,7 +86,8 @@ if __name__ == "__main__":
     mvaCut = np.linspace(4.0, 6.0, 11)
     #mvaCut = np.array([5.0,])
   else:
-    mvaCut = np.linspace(8.0, 10.0, 20)
+    mvaCut = np.linspace(6.0, 8.0, 11)
+    #mvaCut = np.array([7.0,])
 
   for cut in mvaCut:
     eff_sig_bdt = np.mean([float(psi2s_mc_branches[i].query(' and '.join([selection['psi2s'], selection['Dmass'], '(xgb > @cut)'])).shape[0]) / info[eleType]['n_mc_psi2s'] for i in nparts])
@@ -86,7 +97,11 @@ if __name__ == "__main__":
     frac_ratio = (eff_partial_bdt / eff_sig_bdt) * ((br_b2kstarjpsi*br_jpsi2ee) / (br_b2psi2s*br_psi2s2ee))
     print(frac_ratio, eff_partial_bdt, eff_sig_bdt)
 
-    com = 'python KPsi2S_roofit_plb_modified_kde_fixedPartial.py -i {} -o psi2s_fixedPartial_{} --isgn={} --iKstarPsi2S_BKG={} --iKstarJpsi_BKG={} --iKJpsiee_BKG={} --ibkg={} --sel_primitive="sgn,bkg_kstarpsi2s,bkg_kstarjpsi,bkg_kjpsi_ee,bkg_comb" --fit_primitive --partial_ratio={} --mvacut={} --log={}'.format(info[eleType]['inputfile'], eleType, info[eleType]['isgn'], info[eleType]['iKstarPsi2S_BKG'], info[eleType]['iKstarJpsi_BKG'], info[eleType]['iKJpsiee_BKG'], info[eleType]['ibkg'], frac_ratio, cut, log)
+    if eleType == 'pf':
+      com = 'python KPsi2S_roofit_plb_modified_kde_fixedPartial.py -i {} -o psi2s_fixedPartial_{} --isgn={} --iKstarPsi2S_BKG={} --iKstarJpsi_BKG={} --iKJpsiee_BKG={} --ibkg={} --sel_primitive="sgn,bkg_kstarpsi2s,bkg_kstarjpsi,bkg_kjpsi_ee,bkg_comb" --fit_primitive --partial_ratio={} --mvacut={} --log={}'.format(info[eleType]['inputfile'], eleType, info[eleType]['isgn'], info[eleType]['iKstarPsi2S_BKG'], info[eleType]['iKstarJpsi_BKG'], info[eleType]['iKJpsiee_BKG'], info[eleType]['ibkg'], frac_ratio, cut, log)
+    else:
+      com = 'python KPsi2S_roofit_plb_modified_kde_fixedPartial.py -i {} -o psi2s_fixedPartial_{} --isgn={} --iKstarPsi2S_BKG={} --iKstarJpsi_BKG={} --iKJpsiee_BKG={} --sel_primitive="sgn,bkg_kstarpsi2s,bkg_kstarjpsi,bkg_kjpsi_ee" --fit_primitive --partial_ratio={} --mvacut={} --log={}'.format(info[eleType]['inputfile'], eleType, info[eleType]['isgn'], info[eleType]['iKstarPsi2S_BKG'], info[eleType]['iKstarJpsi_BKG'], info[eleType]['iKJpsiee_BKG'], frac_ratio, cut, log)
+
 
     os.system(com)
 
