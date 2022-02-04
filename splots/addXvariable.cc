@@ -154,7 +154,7 @@ void addXvariable(const char* filename) {
     theTreeNew->Branch("Passymetry", &Passymetry, "Passymetry/D");
     theTreeNew->Branch("Kip3d",    &Kip3d, "Kip3d/D");
     theTreeNew->Branch("Kip3dErr", &Kip3dErr, "Kip3dErr/D");
-    theTreeNew->Branch("x", &x, "theHLT7/D");
+    theTreeNew->Branch("x", &x, "x/D");
   }
   
   cout << "Now preparing the new tree" << endl;
