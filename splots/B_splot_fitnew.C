@@ -38,7 +38,7 @@ using namespace std;
 // see below for implementation
 void DoSPlot(RooWorkspace*);                         
 void MakePlots(RooWorkspace*);                       
-void MakeHistos(RooWorkspace*, int, int);
+void MakeHistos(RooWorkspace*, float);
 void getDataSet(const char *, RooWorkspace*, float, float, float);   
 
 void B_splot_fitnew(const char* workspacefile, const char* roottreefile, int q2bin, float bdtCut)
@@ -70,7 +70,7 @@ void B_splot_fitnew(const char* workspacefile, const char* roottreefile, int q2b
   MakePlots(ws);
   
   // Save variables in histos
-  // MakeHistos(wspace, wantPFPF);
+  MakeHistos(ws, bdtCut);
 
   // cleanup
   delete ws;
@@ -310,65 +310,77 @@ void MakePlots(RooWorkspace* ws){
 
 
 // Control plots
-/*
-void MakeHistos(RooWorkspace* ws, int wantPFPF){
+void MakeHistos(RooWorkspace* ws, float bdtCut){
   
   gStyle->SetOptStat(0);
 
   std::cout << std::endl;
-  std::cout << "save histos" << std::endl;
+  std::cout << "Save histos" << std::endl;
 
-  RooRealVar* theAnalysisBdtO = ws->var("theAnalysisBdtO");                
-  RooRealVar* theAnalysisBdtG = ws->var("theAnalysisBdtG");                
+  RooRealVar* xgb      = ws->var("xgb");                
+  RooRealVar* L2id     = ws->var("L2id");            
+  RooRealVar* L1id     = ws->var("L1id");            
+  RooRealVar* Bprob    = ws->var("Bprob");           
+  RooRealVar* BsLxy    = ws->var("BsLxy");           
+  RooRealVar* Bcos     = ws->var("Bcos");            
+  RooRealVar* L1pt     = ws->var("L1pt");         
+  RooRealVar* L2pt     = ws->var("L2pt");         
+  RooRealVar* Kpt      = ws->var("Kpt");          
+  RooRealVar* LKdz     = ws->var("LKdz");            
+  RooRealVar* L1L2dr   = ws->var("L1L2dr");          
+  RooRealVar* LKdr     = ws->var("LKdr");            
+  RooRealVar* L1iso    = ws->var("L1iso");       
+  RooRealVar* Kiso     = ws->var("Kiso");        
+  RooRealVar* Passymetry = ws->var("Passymetry");                
+  RooRealVar* Kip3d    = ws->var("Kip3d");         
 
   // note, we get the dataset with sWeights
-  RooDataSet* data = (RooDataSet*) ws->data("dataWithSWeights");
+  RooDataSet* mydata = (RooDataSet*) ws->data("mydataWithSWeights");
 
   // create weighted data set
-  RooDataSet * dataw_b   = new RooDataSet(data->GetName(),data->GetTitle(),data,*data->get(),0,"bYield_sw") ;
-  RooDataSet * dataw_bkg = new RooDataSet(data->GetName(),data->GetTitle(),data,*data->get(),0,"bkgYield_sw") ;
-  
+  RooDataSet * mydataw_sgn = new RooDataSet(mydata->GetName(),mydata->GetTitle(),mydata,*mydata->get(),0,"nsignal_sw") ;
+  mydataw_sgn->Print();
+
   // convert to TH1
-  TH1 *h1_theAnalysisBdtO_B = dataw_b->createHistogram("h1_theAnalysisBdtO_B",*theAnalysisBdtO,Binning(30));         
-  TH1 *h1_theAnalysisBdtO_bkg  = dataw_bkg->createHistogram("h1_theAnalysisBdtO_bkg",*theAnalysisBdtO,Binning(30));           
-  TH1 *h1_theAnalysisBdtG_B = dataw_b->createHistogram("h1_theAnalysisBdtG_B",*theAnalysisBdtG,Binning(30));         
-  TH1 *h1_theAnalysisBdtG_bkg  = dataw_bkg->createHistogram("h1_theAnalysisBdtG_bkg",*theAnalysisBdtG,Binning(30));           
+  float theinf = bdtCut-2;
+  float thedelta = 15.-theinf;
+  int thebin = thedelta/0.5;
+  TH1 *h1_xgb   = mydataw_sgn->createHistogram("h1_xgb",*xgb,Binning(thebin,theinf,15)); 
+  TH1 *h1_L1id  = mydataw_sgn->createHistogram("h1_L1id",*L1id, Binning(33,-4.,7.)); 
+  TH1 *h1_L2id  = mydataw_sgn->createHistogram("h1_L2id",*L2id, Binning(33,-4.,7.)); 
+  TH1 *h1_Bprob = mydataw_sgn->createHistogram("h1_Bprob",*Bprob, Binning(10,0.,1.)); 
+  TH1 *h1_BsLxy = mydataw_sgn->createHistogram("h1_BsLxy",*BsLxy, Binning(10,0.,100.)); 
+  TH1 *h1_Bcos  = mydataw_sgn->createHistogram("h1_Bcos",*Bcos, Binning(10,0.99,1.)); 
+  TH1 *h1_L1pt  = mydataw_sgn->createHistogram("h1_L1pt",*L1pt, Binning(60,0.,30)); 
+  TH1 *h1_L2pt  = mydataw_sgn->createHistogram("h1_L2pt",*L2pt, Binning(40,0.,20)); 
+  TH1 *h1_Kpt   = mydataw_sgn->createHistogram("h1_Kpt",*Kpt, Binning(40,0.,20)); 
+  TH1 *h1_LKdz  = mydataw_sgn->createHistogram("h1_LKdz",*LKdz, Binning(20,0.,1.)); 
+  TH1 *h1_L1L2dr = mydataw_sgn->createHistogram("h1_L1L2dr",*L1L2dr, Binning(20,0.,2.)); 
+  TH1 *h1_LKdr  = mydataw_sgn->createHistogram("h1_LKdr",*LKdr, Binning(40,0.,1.)); 
+  TH1 *h1_L1iso = mydataw_sgn->createHistogram("h1_L1iso",*L1iso, Binning(30,0.,30.)); 
+  TH1 *h1_Kiso  = mydataw_sgn->createHistogram("h1_Kiso",*Kiso, Binning(30,0.,30.)); 
+  TH1 *h1_Passymetry = mydataw_sgn->createHistogram("h1_Passymetry",*Passymetry, Binning(20,-1.,1.)); 
+  TH1 *h1_Kip3d = mydataw_sgn->createHistogram("h1_Kip3d",*Kip3d, Binning(40,-0.2,0.2)); 
 
   TFile myFileSPlots("myFileSPlots.root","RECREATE");
   myFileSPlots.cd();
-
-  h1_theAnalysisBdtO_B->Write();        
-  h1_theAnalysisBdtO_bkg->Write();        
-  h1_theAnalysisBdtG_B->Write();        
-  h1_theAnalysisBdtG_bkg->Write();        
-
-  if (wantPFPF==1 || checkO==1) {
-    TCanvas* ch1 = new TCanvas("ch1","ch1", 1);
-    h1_theAnalysisBdtO_B->SetLineWidth(2);
-    h1_theAnalysisBdtO_bkg->SetLineWidth(2);
-    h1_theAnalysisBdtO_B->SetLineColor(6);
-    h1_theAnalysisBdtO_bkg->SetLineColor(4);
-    h1_theAnalysisBdtO_B->SetTitle("");
-    h1_theAnalysisBdtO_bkg->SetTitle("");
-    h1_theAnalysisBdtO_B->DrawNormalized("hist");
-    h1_theAnalysisBdtO_bkg->DrawNormalized("samehist");
-    ch1->SaveAs("BdtOH.png");
-  }
-
-  if (wantPFPF==1 || checkO==0){
-    TCanvas* ch2 = new TCanvas("ch2","ch2", 1);
-    h1_theAnalysisBdtG_B->SetLineWidth(2);
-    h1_theAnalysisBdtG_bkg->SetLineWidth(2);
-    h1_theAnalysisBdtG_B->SetLineColor(6);
-    h1_theAnalysisBdtG_bkg->SetLineColor(4);
-    h1_theAnalysisBdtG_B->SetTitle("");
-    h1_theAnalysisBdtG_bkg->SetTitle("");
-    h1_theAnalysisBdtG_B->DrawNormalized("hist");
-    h1_theAnalysisBdtG_bkg->DrawNormalized("samehist");
-    ch2->SaveAs("BdtGH.png");
-  }
+  h1_xgb -> Write();
+  h1_L1id -> Write();
+  h1_L2id -> Write();
+  h1_Bprob -> Write();
+  h1_BsLxy -> Write();
+  h1_Bcos -> Write();
+  h1_L1pt -> Write();
+  h1_L2pt -> Write();
+  h1_Kpt -> Write();
+  h1_LKdz -> Write();
+  h1_L1L2dr -> Write();
+  h1_LKdr -> Write();
+  h1_L1iso -> Write();
+  h1_Kiso -> Write();
+  h1_Passymetry -> Write();
+  h1_Kip3d -> Write();
 }
-*/
 
 // Convert ROOT tree in RooDataset
 void getDataSet(const char *rootfile, RooWorkspace *ws, float bdtCut, float q2min, float q2max) {    
@@ -389,40 +401,36 @@ void getDataSet(const char *rootfile, RooWorkspace *ws, float bdtCut, float q2mi
   RooRealVar xgb("xgb", "xgb", -15., 15., "");           
 
   // BDT inputs
-  RooRealVar L2id("L2id", "L2id", -20.5, 20.5, "");      // range ok: -4, 7          
-  RooRealVar L1id("L1id", "L1id", -20.5, 20.5, "");      // -4, 7      
-  RooRealVar Bprob("Bprob","Bprob",-1.,1.,"");           // 0-1
-  RooRealVar BsLxy("BsLxy","BsLxy",0.,500.,"");          ///// 0-100
-  RooRealVar Bcos("Bcos","Bcos",-1.,1.,"");         // 0.9-1
-  RooRealVar L1ptrel("L1pt/Bmass","L1pt/Bmass", 0., 500.,"");          // 0-10
-  RooRealVar L2ptrel("L2pt/Bmass","L2pt/Bmass", 0., 500.,"");          // 0-10
-  RooRealVar Kptrel("Kpt/Bmass","Kpt/Bmass",   0., 500.,"");           // 0-10
-  RooRealVar LKdz("LKdz",  "LKdz",     0., 50.,"");                    // 0-1     
-  RooRealVar L1L2dr("L1L2dr","L1L2dr", 0., 50.,"");                    // 0-3
-  RooRealVar LKdr("LKdr",  "LKdr",     0., 50, "");                    // 0-4
-  RooRealVar L1isorel("L1iso/L1pt","L1iso/L1pt", 0., 700.,"");         // 0-100
-  RooRealVar Kisorel("Kiso/Kpt",   "Kiso/Kpt",   0., 700.,"");         // 0-50
-  RooRealVar BBDphi("BBDphi", "BBDphi", -4., 4., "");                  
-  RooRealVar BTrkdxy2("BTrkdxy2", "BTrkdxy2", 0., 30., "");             // 0-2  
+  RooRealVar L2id("L2id", "L2id", -20.5, 20.5, "");      
+  RooRealVar L1id("L1id", "L1id", -20.5, 20.5, "");      
+  RooRealVar Bprob("Bprob","Bprob",-1.,1.,"");           
+  RooRealVar BsLxy("BsLxy","BsLxy",0.,500.,"");          
+  RooRealVar Bcos("Bcos","Bcos",-1.,1.,"");         
+  RooRealVar L1pt("L1pt","L1pt", 0., 5000.,"");       
+  RooRealVar L2pt("L2pt","L2pt", 0., 5000.,"");       
+  RooRealVar Kpt("Kpt","Kpt",   0., 5000.,"");        
+  RooRealVar LKdz("LKdz", "LKdz",     0., 50.,"");                 
+  RooRealVar L1L2dr("L1L2dr","L1L2dr", 0., 50.,"");                 
+  RooRealVar LKdr("LKdr", "LKdr",     0., 50, "");                 
+  RooRealVar L1iso("L1iso","L1iso", 0., 10000.,"");      
+  RooRealVar Kiso("Kiso", "Kiso",  0., 10000.,"");      
   RooRealVar Passymetry("Passymetry", "Passymetry", -1., 1., "");
-  RooRealVar Kiprel("Kip3d/Kip3dErr", "Kip3d/Kip3dErr", -50, 50, "");  // -7,7
+  RooRealVar Kip3d("Kip3d", "Kip3d", -1000, 1000, ""); 
 
   RooArgSet setall(Bmass,x,Mll,L2id,L1id,xgb,KLmassD0);
   setall.add(Bprob);
   setall.add(BsLxy);
   setall.add(Bcos);
-  setall.add(L1ptrel);
-  setall.add(L2ptrel);
-  setall.add(Kptrel);
+  setall.add(L1pt);
+  setall.add(L2pt);
+  setall.add(Kpt);
   setall.add(LKdz);
   setall.add(L1L2dr);
   setall.add(LKdr);
-  setall.add(L1isorel);
-  setall.add(Kisorel);
-  setall.add(BBDphi);
-  setall.add(BTrkdxy2);
+  setall.add(L1iso);
+  setall.add(Kiso);
   setall.add(Passymetry);
-  setall.add(Kiprel);
+  setall.add(Kip3d);
 
   TFile *file = TFile::Open(rootfile);
   TTree *tree = (TTree*)file->Get("mytreefit");
