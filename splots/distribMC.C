@@ -25,11 +25,26 @@ void distribMC::Loop(int q2bin, float bdtCut)
   float theinf = bdtCut-2;
   float thedelta = 15.-theinf;
   int thebin = thedelta/0.5;
+  if (q2bin==0) {
+    theinf = bdtCut-2;
+    thedelta = 12.5-theinf;
+    thebin = thedelta/0.5;
+  }
   TH1F *h1mc_mll    = new TH1F("h1mc_mll","h1mc_mll",60,  1., 5.);
   TH1F *h1mc_bmass  = new TH1F("h1mc_bmass","h1mc_bmass",60,  4.5, 5.9);
-  TH1F *h1mc_xgb    = new TH1F("h1mc_xgb","h1mc_xgb",thebin,theinf,15);
-  TH1F *h1mc_L1id   = new TH1F("h1mc_L1id","h1mc_L1id",33,-4.,7.);
-  TH1F *h1mc_L2id   = new TH1F("h1mc_L2id","h1mc_L2id",33,-4.,7.);
+  TH1F *h1mc_xgb;
+  if (q2bin!=0) h1mc_xgb = new TH1F("h1mc_xgb","h1mc_xgb",thebin,theinf,15);
+  if (q2bin==0) h1mc_xgb = new TH1F("h1mc_xgb","h1mc_xgb",thebin,theinf,12.5);
+  TH1F *h1mc_L1id;
+  TH1F *h1mc_L2id;
+  if (q2bin!=0) { 
+    h1mc_L1id   = new TH1F("h1mc_L1id","h1mc_L1id",33,-4.,7.);
+    h1mc_L2id   = new TH1F("h1mc_L2id","h1mc_L2id",33,-4.,7.);
+  } 
+  if (q2bin==0) { 
+    h1mc_L1id   = new TH1F("h1mc_L1id","h1mc_L1id",22,-4.,7.);
+    h1mc_L2id   = new TH1F("h1mc_L2id","h1mc_L2id",22,-4.,7.);
+  } 
   TH1F *h1mc_Bprob  = new TH1F("h1mc_Bprob","h1mc_Bprob",10,0.,1.);
   TH1F *h1mc_BsLxy  = new TH1F("h1mc_BsLxy","h1mc_BsLxy",10,0.,100.);
   TH1F *h1mc_Bcos   = new TH1F("h1mc_Bcos","h1mc_Bcos",10,0.99,1.);
