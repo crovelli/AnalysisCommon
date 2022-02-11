@@ -24,12 +24,12 @@ def residuals(xframe, var,name):
    xframe2 = var.frame()
    xframe2.addPlotable(hresid,"P")
    c2=canvas_create(xframe2,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]',False)
-   c2.SaveAs(name+'_residual.pdf')
+   c2.SaveAs(name+'_residual.png')
    hpull = xframe.pullHist()
    xframe3 = var.frame()
    xframe3.addPlotable(hpull,"P")
    c3=canvas_create(xframe3,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]',False)
-   c3.SaveAs(name+'_pull.pdf')
+   c3.SaveAs(name+'_pull.png')
 
 
 
@@ -98,7 +98,7 @@ def signal_fit(tree, outputfile, branches, SavePlot=True):
    c1=canvas_create(sgnframe,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
    CMS_lumi()
    if SavePlot:
-     c1.SaveAs('sgn_eek_'+outputfile+'.pdf')
+     c1.SaveAs('sgn_eek_'+outputfile+'.png')
      residuals(sgnframe,theBMass,'sgn_eek_'+outputfile)
    params=esig.getParameters(ROOT.RooArgSet(bMass))
    #return {"mean":1}
@@ -125,7 +125,7 @@ def otherB_fit(tree, outputfile, branches, SavePlot=True):
    c1=canvas_create(otherb_frame,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
    CMS_lumi()
    if SavePlot:
-     c1.SaveAs('bkg_otherB_'+outputfile+'.pdf')
+     c1.SaveAs('bkg_otherB_'+outputfile+'.png')
      residuals(otherb_frame,theBMass,'bkg_otherB_'+outputfile)
    params=eexp_otherb.getParameters(ROOT.RooArgSet(bMass))
    n_param = results.floatParsFinal().getSize()
@@ -152,7 +152,7 @@ def kde_fit(tree, outputfile, branches, pdfname, SavePlot=True):
    c1=canvas_create(kde_frame,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
    CMS_lumi()
    if SavePlot:
-     c1.SaveAs('bkg_kde_'+outputfile+'_{}.pdf'.format(pdfname))
+     c1.SaveAs('bkg_kde_'+outputfile+'_{}.png'.format(pdfname))
      residuals(kde_frame,theBMass,'bkg_kde_'+outputfile+'_'+pdfname)
    return kde
 
@@ -177,7 +177,7 @@ def bkg_fit(tree, outputfile, branches, SavePlot=True):
    c1=canvas_create(combframe,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV]')
    CMS_lumi()
    if SavePlot: 
-     c1.SaveAs('bkg_comb_'+outputfile+'.pdf')
+     c1.SaveAs('bkg_comb_'+outputfile+'.png')
    n_param = results.floatParsFinal().getSize()
    print "chi2",combframe.chiSquare(n_param),"ndof",n_param
    print "edm",results.edm(),"log",results.minNll()
@@ -214,7 +214,8 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    wspace.factory('SUM::signal(cb_signal,frac*g_signal)')
 
    # other B - bkg
-   wspace.factory('exp_alpha_otherb[-15.0, -100.0, -5.0]')
+   wspace.factory('exp_alpha_otherb[-15.0, -100.0, -5.0]')              # chiara da testare: testB
+   # wspace.factory('exp_alpha_otherb[-15.0, -100.0, -1.0]')            # chiara da testare: testA
    wspace.factory('Exponential::exp_otherb(x,exp_alpha_otherb)')
 
    # K*Jpsi - bkg
@@ -238,13 +239,19 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
 
    for par in signal_parameters.keys():
      (wspace.var(par)).setVal(signal_parameters[par])
-     (wspace.var(par)).setConstant(True)
+     #(wspace.var(par)).setConstant(True)         # chiara, before everything was constant. Now we want to keep mean(s) float
+   wspace.var('width').setConstant(True)          # chiara
+   wspace.var('alpha1').setConstant(True)         # chiara
+   wspace.var('n1').setConstant(True)             # chiara
+   wspace.var('frac').setConstant(True)           # chiara
+   wspace.var('gauss_width').setConstant(True)    # chiara
+
    for par in otherB_parameters.keys():
      (wspace.var(par)).setVal(otherB_parameters[par])
-     #(wspace.var(par)).setConstant(True)
+
    for par in comb_parameters.keys():
      (wspace.var(par)).setVal(comb_parameters[par])
-     #(wspace.var(par)).setConstant(True)
+     (wspace.var(par)).setConstant(True)          # chiara: was not constant
 
    if partial_ratio is not None:
      wspace.var('frac_partial').setVal(partial_ratio)
@@ -305,11 +312,11 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    CMS_lumi()
    c1.cd()
    c1.Update()
-   c1.SaveAs('total_fit_'+outputfile+'.pdf')
+   c1.SaveAs('total_fit_'+outputfile+'.png')
    print "signal",nsig_visible,"+/-", nsig_visible_err,"comb",ncomb_visible,"+/-", ncomb_visible_err,"K* J/psi", nKstarJpsi_visible, "+/-",nKstarJpsi_visible_err,"otherB", notherB_visible, "+/-",notherB_visible_err
    residuals(xframe,theBMass,"poutana")
 
-   saveWS = False
+   saveWS = True
 
    if saveWS:
      # get likelihood
@@ -326,7 +333,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
      CMS_lumi()
      c2.cd()
      c2.Update()
-     c2.SaveAs('nll_'+outputfile+'.pdf')
+     c2.SaveAs('nll_'+outputfile+'.png')
 
      wspace_output = ROOT.RooWorkspace('wspace')
      getattr(wspace_output, "import")(model)

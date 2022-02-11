@@ -24,12 +24,12 @@ def residuals(xframe, var,name):
    xframe2 = var.frame()
    xframe2.addPlotable(hresid,"P")
    c2=canvas_create(xframe2,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]',False)
-   c2.SaveAs(name+'_residual.pdf')
+   c2.SaveAs(name+'_residual.png')
    hpull = xframe.pullHist()
    xframe3 = var.frame()
    xframe3.addPlotable(hpull,"P")
    c3=canvas_create(xframe3,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]',False)
-   c3.SaveAs(name+'_pull.pdf')
+   c3.SaveAs(name+'_pull.png')
 
 
 
@@ -97,7 +97,7 @@ def signal_fit(tree, outputfile, branches, SavePlot=True):
    c1=canvas_create(sgnframe,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
    CMS_lumi()
    if SavePlot:
-     c1.SaveAs('sgn_eek_'+outputfile+'.pdf')
+     c1.SaveAs('sgn_eek_'+outputfile+'.png')
      residuals(sgnframe,theBMass,'sgn_eek_'+outputfile)
    params=esig.getParameters(ROOT.RooArgSet(bMass))
    #return {"mean":1}
@@ -109,7 +109,6 @@ def signal_fit(tree, outputfile, branches, SavePlot=True):
 def otherB_fit(tree, outputfile, branches, SavePlot=True):
    print "otherB"
    wspace,dataset,bMass,theBMass = define_workspace_bmass_data("wspace_otherB_bkg",branches[0],tree)
-   #wspace.factory('exp_alpha_otherb[-15.7, -100.0, -1.e-4]')
    wspace.factory('exp_alpha_otherb[-15.7, -100.0, -5.0]')
    exp_alpha_otherb = wspace.var('exp_alpha_otherb')
    wspace.factory('Exponential::exp_otherb(x,exp_alpha_otherb)')
@@ -125,7 +124,7 @@ def otherB_fit(tree, outputfile, branches, SavePlot=True):
    c1=canvas_create(otherb_frame,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
    CMS_lumi()
    if SavePlot:
-     c1.SaveAs('bkg_otherB_'+outputfile+'.pdf')
+     c1.SaveAs('bkg_otherB_'+outputfile+'.png')
      residuals(otherb_frame,theBMass,'bkg_otherB_'+outputfile)
    params=eexp_otherb.getParameters(ROOT.RooArgSet(bMass))
    n_param = results.floatParsFinal().getSize()
@@ -140,7 +139,6 @@ def kde_fit(tree, outputfile, branches, pdfname, SavePlot=True):
    print "KDE - {}".format(pdfname)
    wspace,dataset,bMass,theBMass = define_workspace_bmass_data("wspace_kde",branches[0],tree)
    kde_frame=theBMass.frame()
-   #wspace.factory('KeysPdf::{0}(x,data,MirrorLeft,2.0)'.format(pdfname))
    wspace.factory('KeysPdf::{0}(x,data,MirrorBoth,2.0)'.format(pdfname))
    kde = wspace.pdf(pdfname)
 
@@ -154,7 +152,7 @@ def kde_fit(tree, outputfile, branches, pdfname, SavePlot=True):
    c1=canvas_create(kde_frame,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
    CMS_lumi()
    if SavePlot:
-     c1.SaveAs('bkg_kde_'+outputfile+'_{}.pdf'.format(pdfname))
+     c1.SaveAs('bkg_kde_'+outputfile+'_{}.png'.format(pdfname))
      residuals(kde_frame,theBMass,'bkg_kde_'+outputfile+'_'+pdfname)
    return kde
 
@@ -178,7 +176,7 @@ def bkg_fit(tree, outputfile, branches, SavePlot=True):
    c1=canvas_create(combframe,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV]')
    CMS_lumi()
    if SavePlot: 
-     c1.SaveAs('bkg_comb_'+outputfile+'.pdf')
+     c1.SaveAs('bkg_comb_'+outputfile+'.png')
    n_param = results.floatParsFinal().getSize()
    print "chi2",combframe.chiSquare(n_param),"ndof",n_param
    print "edm",results.edm(),"log",results.minNll()
@@ -217,8 +215,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    wspace.factory('SUM::signal(cb_signal,frac*g_signal)')
 
    # other B - bkg
-   #wspace.factory('exp_alpha_otherb[-1.0, -100.0, -1.e-4]')
-   wspace.factory('exp_alpha_otherb[-15.0, -100.0, -5.0]')
+   wspace.factory('exp_alpha_otherb[-15.0, -100.0, -5.0]') # chiara
    wspace.factory('Exponential::exp_otherb(x,exp_alpha_otherb)')
 
    # K*Psi2S - bkg 
@@ -235,10 +232,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    wspace.factory('Exponential::exp_comb(x,exp_alpha_comb)')
 
    #sum
-   #wspace.factory('SUM::model(nsignal*signal,ncomb*exp_comb,nKstarPsi2S*kstarpsi2s,nKstarJpsi*kstarjpsi,nkjpsi*kjpsi,notherB*exp_otherb)')
-   #wspace.factory('SUM::model(nsignal*signal,ncomb*exp_comb,nKstarPsi2S*kstarpsi2s,nkjpsi*kjpsi,notherB*exp_otherb)')
    wspace.factory('SUM::model(nsignal*signal,ncomb*exp_comb,nKstarPsi2S*kstarpsi2s,notherB*exp_otherb)')
-   #wspace.factory('SUM::model(nsignal*signal,ncomb*exp_comb,nKstarPsi2S*kstarpsi2s,nKstarJpsi*kstarjpsi,notherB*exp_otherb)')
 
    model = wspace.pdf('model');   
    signal = wspace.pdf('signal');        exp_comb = wspace.pdf('exp_comb')
@@ -253,10 +247,17 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
 
    for par in signal_parameters.keys():
      (wspace.var(par)).setVal(signal_parameters[par])
-     (wspace.var(par)).setConstant(True)
+     #(wspace.var(par)).setConstant(True)
+   wspace.var('width').setConstant(True)          # chiara
+   wspace.var('alpha1').setConstant(True)         # chiara
+   wspace.var('n1').setConstant(True)             # chiara
+   wspace.var('frac').setConstant(True)           # chiara
+   wspace.var('gauss_width').setConstant(True)    # chiara
+
    for par in otherB_parameters.keys():
      (wspace.var(par)).setVal(otherB_parameters[par])
      #(wspace.var(par)).setConstant(True)
+
    for par in comb_parameters.keys():
      (wspace.var(par)).setVal(comb_parameters[par])
      #(wspace.var(par)).setConstant(True)
@@ -282,8 +283,8 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    #model.plotOn(xframe,RooFit.Name("kstarjpsi"),RooFit.Components("kstarjpsi"),RooFit.Range("Full"),RooFit.FillColor(30),RooFit.LineColor(15),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
    model.plotOn(xframe,RooFit.Name("signal"),RooFit.Components("signal"),RooFit.Range("Full"),RooFit.DrawOption("L"),RooFit.LineStyle(2),RooFit.LineColor(ROOT.kBlue),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected), RooFit.LineWidth(3))
    model.plotOn(xframe, RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineColor(ROOT.kRed) )
- #  c1=canvas_create(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]')  
- #  c1.SaveAs('total_fit_'+outputfile+'.pdf')
+   #  c1=canvas_create(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]')  
+   #  c1.SaveAs('total_fit_'+outputfile+'.png')
    wspace.defineSet('obs', 'x')
    obs  = wspace.set('obs') 
 
@@ -301,8 +302,8 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    nsig_visible, nsig_visible_err = get_visible_yield_error(obs, results, signal, nsignal)
    nKstarPsi2S_visible = get_visible_yield(obs, results, kstarpsi2s , nKstarPsi2S)
    nKstarPsi2S_visible_err = 0.0
-   nKstarJpsi_visible, nKstarJpsi_visible_err = get_visible_yield_error(obs, results, kstarjpsi , nKstarJpsi)
-   nKJpsi_visible, nKJpsi_visible_err = get_visible_yield_error(obs, results,kjpsi , nKJpsi)
+   ##nKstarJpsi_visible, nKstarJpsi_visible_err = get_visible_yield_error(obs, results, kstarjpsi , nKstarJpsi)
+   ##nKJpsi_visible, nKJpsi_visible_err = get_visible_yield_error(obs, results,kjpsi , nKJpsi)
    notherB_visible, notherB_visible_err = get_visible_yield_error(obs, results,exp_otherb , notherB)
    #nbkg_visible = ncomb_visible+nKstarPsi2S_visible+nKstarJpsi_visible+nKJpsi_visible+notherB_visible
    #nbkg_visible = ncomb_visible+nKstarPsi2S_visible+nKJpsi_visible+notherB_visible
@@ -333,14 +334,15 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    CMS_lumi()
    c1.cd()
    c1.Update()
-   c1.SaveAs('total_fit_'+outputfile+'.pdf')
-   print "signal",nsig_visible,"+/-", nsig_visible_err,"comb",ncomb_visible,"+/-", ncomb_visible_err,"K* Psi2S", nKstarPsi2S_visible, "+/-",nKstarPsi2S_visible_err,"K* J/psi", nKstarJpsi_visible, "+/-",nKstarJpsi_visible_err, "K J/psi", nKJpsi_visible, "+/-", nKJpsi_visible_err, "otherB", notherB_visible, "+/-",notherB_visible_err
+   c1.SaveAs('total_fit_'+outputfile+'.png')
+   print "signal",nsig_visible,"+/-", nsig_visible_err,"comb",ncomb_visible,"+/-", ncomb_visible_err,"K* Psi2S", nKstarPsi2S_visible, "+/-",nKstarPsi2S_visible_err, "otherB", notherB_visible, "+/-",notherB_visible_err
+   #print "signal",nsig_visible,"+/-", nsig_visible_err,"comb",ncomb_visible,"+/-", ncomb_visible_err,"K* Psi2S", nKstarPsi2S_visible, "+/-",nKstarPsi2S_visible_err,"K* J/psi", nKstarJpsi_visible, "+/-",nKstarJpsi_visible_err, "K J/psi", nKJpsi_visible, "+/-", nKJpsi_visible_err, "otherB", notherB_visible, "+/-",notherB_visible_err
    residuals(xframe,theBMass,"poutana")
 
-   saveWS = False
+   saveWS = True
    if saveWS:
      # get likelihood
-
+      
      nll = model.createNLL(dataset)
      ROOT.RooMinuit(nll).migrad()
      nll_frame = nsignal.frame(RooFit.Bins(30),RooFit.Range(500,1000),RooFit.Title("LL and profileLL in nsignal")) ;
@@ -353,7 +355,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
      CMS_lumi()
      c2.cd()
      c2.Update()
-     c2.SaveAs('nll_'+outputfile+'.pdf')
+     c2.SaveAs('nll_'+outputfile+'.png')
 
      wspace_output = ROOT.RooWorkspace('wspace')
      getattr(wspace_output, "import")(model)
@@ -374,8 +376,8 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    df['nbkg'] = nbkg_visible
    df['ncomb'] = ncomb_visible
    df['nKstarPsi2S'] = nKstarPsi2S_visible
-   df['nKstarJpsi'] = nKstarJpsi_visible
-   df['nKJpsi'] = nKJpsi_visible
+   #df['nKstarJpsi'] = nKstarJpsi_visible
+   #df['nKJpsi'] = nKJpsi_visible
    df['notherB'] = notherB_visible
    df['snr'] = nsig_visible / np.sqrt(nsig_visible + nbkg_visible)
    df['chi2'] = xframe.chiSquare(n_param)
@@ -387,7 +389,8 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
        writer.writeheader()
      writer.writerow(df) 
 
-   return (nsig_visible, ncomb_visible, nKstarPsi2S_visible, nKstarJpsi_visible, nKJpsi_visible, notherB_visible, nsignal.getVal() )
+     #return (nsig_visible, ncomb_visible, nKstarPsi2S_visible, nKstarJpsi_visible, nKJpsi_visible, notherB_visible, nsignal.getVal() )
+   return (nsig_visible, ncomb_visible, nKstarPsi2S_visible, notherB_visible, nsignal.getVal() )
 
 
 
@@ -421,7 +424,6 @@ if __name__ == "__main__":
     args.outputfile+="_wp"+str(args.mva)
 
     otherB_parameters={'exp_alpha_otherb':-5.099}
-    #otherB_parameters={'exp_alpha_otherb':-7.099}
     comb_parameters={'exp_alpha_comb':-1.50615}
 
     print "start"
@@ -484,8 +486,10 @@ if __name__ == "__main__":
       if args.minx==-1: args.minx=signal_parameters["mean"]-2*signal_parameters["width"]
       if args.maxx==-1: args.maxx=signal_parameters["mean"]+2*signal_parameters["width"]
 
-      nsig, nbkg, nKstarPsi2S, nKstarJpsi, nKJpsi, notherB, nsig_total =total_fit(tree_cut, args.outputfile, branches, signal_parameters,  otherB_parameters, KstarPsi2S_pdf, KstarJpsi_pdf ,KJpsiee_pdf, comb_parameters, {"min":args.minx,"max":args.maxx},args.partial_ratio, str(args.mva), args.log)
-      print "sig",nsig,"comb", nbkg,"K* Psi2S",  nKstarPsi2S,"K* J/psi", nKstarJpsi,"K J/psi", nKJpsi, "otherB", notherB,"all sig", nsig_total
+      nsig, nbkg, nKstarPsi2S, notherB, nsig_total =total_fit(tree_cut, args.outputfile, branches, signal_parameters,  otherB_parameters, KstarPsi2S_pdf, KstarJpsi_pdf ,KJpsiee_pdf, comb_parameters, {"min":args.minx,"max":args.maxx},args.partial_ratio, str(args.mva), args.log)
+      #nsig, nbkg, nKstarPsi2S, nKstarJpsi, nKJpsi, notherB, nsig_total =total_fit(tree_cut, args.outputfile, branches, signal_parameters,  otherB_parameters, KstarPsi2S_pdf, KstarJpsi_pdf ,KJpsiee_pdf, comb_parameters, {"min":args.minx,"max":args.maxx},args.partial_ratio, str(args.mva), args.log)
+      #print "sig",nsig,"comb", nbkg,"K* Psi2S",  nKstarPsi2S,"K* J/psi", nKstarJpsi,"K J/psi", nKJpsi, "otherB", notherB,"all sig", nsig_total
+      print "sig",nsig,"comb", nbkg,"K* Psi2S",  nKstarPsi2S, "otherB", notherB,"all sig", nsig_total
       # combinatorial BKG parameters set but not fixed.
 #      print "sigma",float(nsig)/math.sqrt(nsig+nkjpsi+nbkg),"nsig",float(nsig),"nbkg",float(nbkg),"Kjpsi leak",float(nkjpsi)
 

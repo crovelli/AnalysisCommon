@@ -5,10 +5,6 @@ from roofit_helper import *
 #ROOT.gROOT.ProcessLine(open('roofit_models.h').read())
 #from ROOT import DoubleSidedCB
 #from ROOT import ROOT_DoubleSidedCB
-#from XGBweight import XGBweight
-#rt.gInterpreter.Declare(XGBweight)
-#from PUweight import PUweight
-#rt.gInterpreter.Declare(PUweight)
 from roofit_models import root_function_DoubleSidedCB
 ROOT.gInterpreter.Declare(root_function_DoubleSidedCB)
 #ROOT.gStyle.SetOptFit(0000);
@@ -16,11 +12,11 @@ ROOT.gROOT.SetBatch(True);
 ROOT.gROOT.SetStyle("Plain");
 msgservice = ROOT.RooMsgService.instance()
 msgservice.setGlobalKillBelow(RooFit.FATAL)
+import numpy as np
 import csv
 import os.path
 import atexit
 
-import numpy as np
 import matplotlib as mpl
 mpl.use('agg')
 import matplotlib.font_manager
@@ -59,14 +55,12 @@ def residuals(xframe, var,name):
    xframe2 = var.frame()
    xframe2.addPlotable(hresid,"P")
    c2=canvas_create(xframe2,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]',False)
-   c2.SaveAs(name+'_residual.pdf')
+   c2.SaveAs(name+'_residual.png')
    hpull = xframe.pullHist()
    xframe3 = var.frame()
    xframe3.addPlotable(hpull,"P")
    c3=canvas_create(xframe3,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]',False)
-   c3.SaveAs(name+'_pull.pdf')
-
-
+   c3.SaveAs(name+'_pull.png')
 
 def define_workspace_bmass_data(wspace_name,mB_branch,tree):
    wspace = ROOT.RooWorkspace(wspace_name)
@@ -83,7 +77,6 @@ def define_workspace_bmass_data(wspace_name,mB_branch,tree):
    # This is solved in the latest ROOT version > 6.14.08
    atexit.register(wspace.Delete)
    return wspace,dataset,bMass,theBMass
-
 
 def get_visible_yield_error(obs, results, pdf, amplitude):
    intgral_pdf = pdf.createIntegral(obs,obs,"window")
@@ -131,7 +124,7 @@ def signal_fit(tree, outputfile, branches):
   
    c1=canvas_create(sgnframe,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
    CMS_lumi()
-   c1.SaveAs('sgn_eek_'+outputfile+'.pdf')
+   c1.SaveAs('sgn_eek_'+outputfile+'.png')
    residuals(sgnframe,theBMass,'sgn_eek_'+outputfile)
    params=esig.getParameters(ROOT.RooArgSet(bMass))
    return {"mean":params.getRealValue('mean'),"width": params.getRealValue('width'),"alpha1":params.getRealValue('alpha1'),"n1":params.getRealValue('n1'),"alpha2":params.getRealValue('alpha2'),"n2":params.getRealValue('n2')}
@@ -155,7 +148,7 @@ def kjpsi_fit(tree, outputfile, branches):
    ekjpsi.plotOn(kjpframe,RooFit.Name("ekjpsi"),RooFit.LineColor(30),RooFit.Normalization(1.0, ROOT.RooAbsReal.RelativeExpected),RooFit.LineWidth(3))
    c1=canvas_create(kjpframe,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
    CMS_lumi()
-   c1.SaveAs('bkg_jpsik_'+outputfile+'.pdf')
+   c1.SaveAs('bkg_jpsik_'+outputfile+'.png')
    residuals(kjpframe,theBMass,'bkg_jpsik_'+outputfile)
    params=ekjpsi.getParameters(ROOT.RooArgSet(bMass))
    n_param = results.floatParsFinal().getSize()
@@ -184,7 +177,7 @@ def bkg_fit(tree, outputfile, branches):
    params=ebkg.getParameters(ROOT.RooArgSet(bMass))
    c1=canvas_create(bkgframe,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV]')
    CMS_lumi()
-   c1.SaveAs('bkg_comb_'+outputfile+'.pdf')
+   c1.SaveAs('bkg_comb_'+outputfile+'.png')
    n_param = results.floatParsFinal().getSize()
    print "chi2",bkgframe.chiSquare(n_param),"ndof",n_param
    print "edm",results.edm(),"log",results.minNll()
@@ -211,7 +204,7 @@ def kde_fit(tree, outputfile, branches, pdfname, SavePlot=True):
    c1=canvas_create(kde_frame,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
    CMS_lumi()
    if SavePlot:
-     c1.SaveAs('bkg_kde_'+outputfile+'_{}.pdf'.format(pdfname))
+     c1.SaveAs('bkg_kde_'+outputfile+'_{}.png'.format(pdfname))
      residuals(kde_frame,theBMass,'bkg_kde_'+outputfile+'_'+pdfname)
    return kde
 
@@ -239,22 +232,22 @@ def total_fit(tree, outputfile, branches, sgn_parameters=None, kjpsi_pdf=None, k
    wspace.factory('exp_alpha[-1.0, -100.0, -1.e-4]')
    alpha = wspace.var('alpha')
    wspace.factory('Exponential::bkg(x,exp_alpha)')
-
+   
    # Gaussian - bkg 
    #wspace.factory('mean_kjpsi[4.7, 1.0, 5.0]')
    #wspace.factory('width_kjpsi[0.1, 0.001, 5.0]')
    #wspace.factory("RooGaussian::kjpsi(x,mean_kjpsi,width_kjpsi)")
-
+   
    # KJpsi - bkg
    getattr(wspace, "import")(kjpsi_pdf, RooFit.Rename('kjpsi'))
-
+   
    # K* ee - bkg
    getattr(wspace, "import")(kstaree_pdf, RooFit.Rename('kstaree'))
-
+   
    #sum
    #wspace.factory('SUM::model(nsig*sig,nbkg*bkg,nkjpsi*kjpsi,nkstaree*kstaree)')
    wspace.factory('SUM::model(nsig*sig,nbkg*bkg,nkjpsi*kjpsi)')
-  
+   
    model = wspace.pdf('model');    bkg = wspace.pdf('bkg')
    sig = wspace.pdf('sig');        kjpsi = wspace.pdf('kjpsi');    
    nsig = wspace.var('nsig');      nbkg = wspace.var('nbkg')
@@ -262,29 +255,26 @@ def total_fit(tree, outputfile, branches, sgn_parameters=None, kjpsi_pdf=None, k
    #mean = wspace.var('mean')   
    nkstaree = wspace.var('nkstaree')
    kstaree = wspace.pdf('kstaree')
-
+   
    if set_sgn_yield!=None:
-     nsig.setVal(set_sgn_yield)
-     nsig.setConstant(True)
+      nsig.setVal(set_sgn_yield)
+      nsig.setConstant(True)
    for par in sgn_parameters.keys():
-     (wspace.var(par)).setVal(sgn_parameters[par])
-     (wspace.var(par)).setConstant(True)
+      (wspace.var(par)).setVal(sgn_parameters[par])
+      (wspace.var(par)).setConstant(True)
    #for par in kjpsi_parameters.keys():
    #  (wspace.var(par)).setVal(kjpsi_parameters[par])
    #  (wspace.var(par)).setConstant(True)
    for par in bkg_parameters.keys():
-     (wspace.var(par)).setVal(bkg_parameters[par]) 
+      (wspace.var(par)).setVal(bkg_parameters[par]) 
 
    results = model.fitTo(dataset, RooFit.Extended(True), RooFit.Save(), RooFit.Range(4.7,5.7), RooFit.PrintLevel(-1))
    print results.Print()
    xframe=theBMass.frame(RooFit.Title(""))
 
-   
+
    if Blind_range["min"]>4.7 and Blind_range["max"]<5.7:
       norm = dataset.reduce('(({0} > {1}) & ({0} < {2})) | (({0}> {3}) & ({0} < {4}))'.format(branches[0],"4.7", str(Blind_range["min"]),str(Blind_range["max"]), "5.7")).sumEntries() / dataset.reduce('({0} > {1}) & ({0} < {2})'.format(branches[0],"4.7", "5.7")).sumEntries()
-#      blind= ROOT.RooRealVar("blind","blind",Blind_range["min"],Blind_range["max"])
- #     blind.setRange("left",4.7,Blind_range["min"])
- #     blind.setRange("right",Blind_range["max"],5.7)
       theBMass.setRange("left",4.7,Blind_range["min"])
       theBMass.setRange("right",Blind_range["max"],5.7)
       norm=1.0
@@ -292,8 +282,8 @@ def total_fit(tree, outputfile, branches, sgn_parameters=None, kjpsi_pdf=None, k
    else:
       norm=1.
       dataset.plotOn(xframe,RooFit.Binning(nbin_data), RooFit.Name("datas")) 
+      
 
-   
    #norm=1.
    #dataset.plotOn(xframe,RooFit.Binning(nbin_data), RooFit.Name("datas"))
 
@@ -302,11 +292,11 @@ def total_fit(tree, outputfile, branches, sgn_parameters=None, kjpsi_pdf=None, k
    #model.plotOn(xframe,RooFit.Name("kstaree"),RooFit.Components("kstaree"),RooFit.Range("Full"),RooFit.FillColor(30),RooFit.LineColor(12),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
    model.plotOn(xframe,RooFit.Name("sig"),RooFit.Components("sig"),RooFit.Range("Full"),RooFit.DrawOption("L"),RooFit.LineStyle(2),RooFit.LineColor(ROOT.kBlue),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected), RooFit.LineWidth(3))
    model.plotOn(xframe, RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineColor(ROOT.kRed) )
-     
+   
    wspace.defineSet('obs', 'x')
    obs  = wspace.set('obs')  
    theBMass.setRange("window",Blind_range["min"],Blind_range["max"])
-
+   
    #theBMass.setRange("window",5.0,5.4)
    obs2= ROOT.RooRealVar("obs2","obs2",Blind_range["min"],Blind_range["max"])
    nset = ROOT.RooArgSet(obs2)
@@ -317,12 +307,12 @@ def total_fit(tree, outputfile, branches, sgn_parameters=None, kjpsi_pdf=None, k
    nsig_visible, nsig_visible_err = get_visible_yield_error(obs, results, sig, nsig)
    nkjpsi_visible, nkjpsi_visible_err = get_visible_yield_error(obs, results, kjpsi, nkjpsi)
    print "hereee",nbkg_visible,nsig_visible,nkjpsi_visible
-#   c1=canvas_create(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]')
+   #   c1=canvas_create(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]')
    n_param = results.floatParsFinal().getSize()
    print "chi2",xframe.chiSquare(n_param),"ndof",n_param
    print "edm",results.edm(),"log",results.minNll()
    c1=canvas_create(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]')
-
+   
    legend = ROOT.TLegend(0.65,0.65,0.92,0.85)
    legend.AddEntry(xframe.findObject("bkg"),"Combinatorial","l");
    legend.AddEntry(xframe.findObject("kjpsi"),"B -> J/#psiK","l");
@@ -338,50 +328,59 @@ def total_fit(tree, outputfile, branches, sgn_parameters=None, kjpsi_pdf=None, k
    CMS_lumi()
    c1.cd()
    c1.Update()
-   c1.SaveAs('total_fit_'+outputfile+'.pdf')
+   c1.SaveAs('total_fit_'+outputfile+'.png')
    print nsig_visible, nsig_visible_err, nbkg_visible_err, nkjpsi_visible_err
    residuals(xframe,theBMass,"poutana")
    if number_of_mctoys!=None:
-     nsig.setConstant(False)
-     mctoys = ROOT.RooMCStudy(model, ROOT.RooArgSet(theBMass),
-                 RooFit.Binned( ROOT.kTRUE),
-                 #RooFit.Binned( ROOT.kFALSE),
-                 ROOT.RooFit.Silence(),
-                 RooFit.Extended(),
-                 RooFit.FitOptions(
-                    RooFit.Save(), RooFit.Range(4.7,5.7), RooFit.PrintLevel(-1)
-                 )
-            )
-     mctoys.generateAndFit(number_of_mctoys)
+      nsig.setConstant(False)
+      mctoys = ROOT.RooMCStudy(model, ROOT.RooArgSet(theBMass),
+               RooFit.Binned( ROOT.kTRUE),
+               #RooFit.Binned( ROOT.kFALSE),
+                  ROOT.RooFit.Silence(),
+                  RooFit.Extended(),
+                  RooFit.FitOptions(
+                     RooFit.Save(), RooFit.Range(4.7,5.7), RooFit.PrintLevel(-1)
+                  )
+             )
+      mctoys.generateAndFit(number_of_mctoys)
 
-     frame1 = mctoys.plotParam(nsig, ROOT.RooFit.Bins(40))
-     frame2 = mctoys.plotError(nsig, ROOT.RooFit.Bins(40))
-     frame3 = mctoys.plotPull(nsig, ROOT.RooFit.Bins(40), 
-                                     ROOT.RooFit.FitGauss(ROOT.kTRUE)
-                              )
-     # Plot distribution of minimized likelihood
-     frame4 = mctoys.plotNLL(ROOT.RooFit.Bins(40))
-     cpr=canvas_create(frame1,4.7,5.7,1,'Distribution of the fitted value of N_{sgn}',False)
-     cpr.SaveAs("cpr_"+outputfile+".pdf")
-     cerr=canvas_create(frame2,0,1,1,'Distribution of the fitted error of N_{sgn}',False)
-     cerr.SaveAs("cerr_"+outputfile+".pdf")
-     cpull=canvas_create(frame3,4.7,5.7,1,' Pull of N_{sgn}',False)
-     cpull.SaveAs("cpull_"+outputfile+".pdf")
-     clog=canvas_create(frame4,4.7,5.7,1,'- log (L)')
-     clog.SaveAs("clog_"+outputfile+".pdf")
+      frame1 = mctoys.plotParam(nsig, ROOT.RooFit.Bins(40))
+      frame2 = mctoys.plotError(nsig, ROOT.RooFit.Bins(40))
+      frame3 = mctoys.plotPull(nsig, ROOT.RooFit.Bins(40), 
+                                      ROOT.RooFit.FitGauss(ROOT.kTRUE)
+                               )
+      # Plot distribution of minimized likelihood
+      frame4 = mctoys.plotNLL(ROOT.RooFit.Bins(40))
+      cpr=canvas_create(frame1,4.7,5.7,1,'Distribution of the fitted value of N_{sgn}',False)
+      cpr.SaveAs("cpr_"+outputfile+".png")
+      cerr=canvas_create(frame2,0,1,1,'Distribution of the fitted error of N_{sgn}',False)
+      cerr.SaveAs("cerr_"+outputfile+".png")
+      cpull=canvas_create(frame3,4.7,5.7,1,' Pull of N_{sgn}',False)
+      cpull.SaveAs("cpull_"+outputfile+".png")
+      clog=canvas_create(frame4,4.7,5.7,1,'- log (L)')
+      clog.SaveAs("clog_"+outputfile+".png")
 
-     postfit_data = mctoys.fitParDataSet()
-     postfit_nsig = np.array([postfit_data.get(i).getRealValue("nsig") for i in range(int(postfit_data.sumEntries()))])
-     #postfit_nsig = np.array([get_visible_yield(obs, sig, postfit_data.get(i).getRealValue("nsig")) for i in range(int(postfit_data.sumEntries()))])
-     #postfit_mu = np.array([s/nsig_visible for s in postfit_nsig])
-     postfit_mu = np.array([s/set_sgn_yield for s in postfit_nsig])
-     rms_mu = np.std(postfit_mu)
-     fig, ax = plt.subplots()
-     ax.hist(postfit_mu, bins=50, normed=True, histtype='step', label='MVA={}, RMS={}'.format(mva, rms_mu))
-     ax.set_xlabel(r'$\mu$')
-     ax.set_ylabel('a.u.')
-     ax.legend(loc='best')
-     fig.savefig('cmu_{}.pdf'.format(outputfile), bbox_inches='tight')
+      postfit_data = mctoys.fitParDataSet()
+      postfit_nsig = np.array([postfit_data.get(i).getRealValue("nsig") for i in range(int(postfit_data.sumEntries()))])
+      #postfit_nsig = np.array([get_visible_yield(obs, sig, postfit_data.get(i).getRealValue("nsig")) for i in range(int(postfit_data.sumEntries()))])
+      #postfit_mu = np.array([s/nsig_visible for s in postfit_nsig])
+      postfit_mu = np.array([s/set_sgn_yield for s in postfit_nsig])
+      rms_mu = np.std(postfit_mu)
+      fig, ax = plt.subplots()
+      ax.hist(postfit_mu, bins=50, normed=True, histtype='step', label='MVA={}, RMS={}'.format(mva, rms_mu))
+      ax.set_xlabel(r'$\mu$')
+      ax.set_ylabel('a.u.')
+      ax.legend(loc='best')
+      fig.savefig('cmu_{}.png'.format(outputfile), bbox_inches='tight')
+
+   # Save workspace 
+   wspace_output = ROOT.RooWorkspace('wspace')
+   getattr(wspace_output, "import")(model)
+   getattr(wspace_output, "import")(dataset)
+   params = model.getParameters(dataset)
+   wspace_output.saveSnapshot("nominal_values",params)
+   wspace_output.Print("V")
+   wspace_output.writeToFile('wspace_'+outputfile+'.root')
 
    csv_header = ['cut', 'nsig', 'nbkg', 'njpsi', 'snr', 'rms_mu']
    df = {}
