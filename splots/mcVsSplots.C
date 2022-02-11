@@ -169,8 +169,8 @@ void drawTH1pair(TH1* h1, TH1* h2,
 void mcVsSplots(int q2bin)
 {
   // Input files 
-  TFile *fileMC = new TFile("./files_nonRegr/mc_PFPF_LowQ2Bin.root");
-  TFile *fileSPlots = new TFile("./files_nonRegr/splots_PFPF_LowQ2Bin.root");
+  TFile *fileMC = new TFile("./files_nonRegr/mc_PFPF_Psi2sBin.root");
+  TFile *fileSPlots = new TFile("./files_nonRegr/splots_PFPF_psi2sBin.root");
   
   // MC histos 
   TH1F *h1mc_xgb   = (TH1F*)fileMC->Get("h1mc_xgb");
@@ -217,7 +217,25 @@ void mcVsSplots(int q2bin)
   h1data_L2pt->Rebin();
   h1data_L1iso->Rebin();
   h1data_Kiso->Rebin();
-  if (q2bin==0) {
+
+  if (q2bin==2) {
+    h1mc_Kiso->Rebin();
+    h1data_Kiso->Rebin();
+    h1data_Kpt->Rebin();
+    h1mc_Kpt->Rebin();
+    h1data_L1pt->Rebin();
+    h1mc_L1pt->Rebin();
+    h1mc_L1id->Rebin();
+    h1data_L1id->Rebin();
+    h1data_L2pt->Rebin();
+    h1mc_L2pt->Rebin();
+    h1mc_L2id->Rebin();
+    h1data_L2id->Rebin();
+    h1data_LKdr->Rebin();
+    h1mc_LKdr->Rebin();
+  }
+
+  if (q2bin==0 || q2bin==2) {
     h1data_xgb->Rebin();
     h1mc_xgb->Rebin();
     h1data_Kpt->Rebin();
