@@ -1,0 +1,9 @@
+# JPsi bin:
+.L SPlotJPsi.cc++
+.L jpsiBin.C++
+jpsiBin("workspacefile", "roottreefile", bdtCut)
+
+# Low q2 bin
+.L DoubleSidedCB2.cc++
+.L lowq2Bin.C++
+lowq2Bin("workspacefile", "roottreefile", bdtCut)
