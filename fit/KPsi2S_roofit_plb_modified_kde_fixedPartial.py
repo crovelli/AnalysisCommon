@@ -247,7 +247,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
 
    for par in signal_parameters.keys():
      (wspace.var(par)).setVal(signal_parameters[par])
-     #(wspace.var(par)).setConstant(True)
+     #(wspace.var(par)).setConstant(True)         # chiara, before everything constant
    wspace.var('width').setConstant(True)          # chiara
    wspace.var('alpha1').setConstant(True)         # chiara
    wspace.var('n1').setConstant(True)             # chiara
@@ -260,7 +260,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
 
    for par in comb_parameters.keys():
      (wspace.var(par)).setVal(comb_parameters[par])
-     #(wspace.var(par)).setConstant(True)
+     (wspace.var(par)).setConstant(True)           # chiara: was not constant 
 
    if partial_ratio is not None:
      wspace.var('frac_partial').setVal(partial_ratio)
