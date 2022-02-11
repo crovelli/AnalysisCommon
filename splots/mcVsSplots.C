@@ -166,11 +166,11 @@ void drawTH1pair(TH1* h1, TH1* h2,
   fileOut.Close();
 }
 
-void mcVsSplots()
+void mcVsSplots(int q2bin)
 {
   // Input files 
-  TFile *fileMC = new TFile("./files_nonRegr/mc_PFPF_JPsiBin.root");
-  TFile *fileSPlots = new TFile("./files_nonRegr/splots_PFPF_JPsiBin___testB.root");
+  TFile *fileMC = new TFile("./files_nonRegr/mc_PFPF_LowQ2Bin.root");
+  TFile *fileSPlots = new TFile("./files_nonRegr/splots_PFPF_LowQ2Bin.root");
   
   // MC histos 
   TH1F *h1mc_xgb   = (TH1F*)fileMC->Get("h1mc_xgb");
@@ -217,6 +217,14 @@ void mcVsSplots()
   h1data_L2pt->Rebin();
   h1data_L1iso->Rebin();
   h1data_Kiso->Rebin();
+  if (q2bin==0) {
+    h1data_xgb->Rebin();
+    h1mc_xgb->Rebin();
+    h1data_Kpt->Rebin();
+    h1mc_Kpt->Rebin();
+    h1data_LKdr->Rebin();
+    h1mc_LKdr->Rebin();
+  }
 
   // In sPlots, put bins with <0 weight to zero
   int nBinsData_xgb   = h1data_xgb->GetNbinsX();
