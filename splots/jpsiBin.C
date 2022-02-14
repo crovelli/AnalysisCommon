@@ -333,6 +333,7 @@ void MakeHistos(RooWorkspace* ws, float bdtCut){
   RooRealVar* Kiso     = ws->var("Kiso");        
   RooRealVar* Passymetry = ws->var("Passymetry");                
   RooRealVar* Kip3d    = ws->var("Kip3d");         
+  RooRealVar* KLmassD0 = ws->var("KLmassD0");
 
   // note, we get the dataset with sWeights
   RooDataSet* mydata = (RooDataSet*) ws->data("mydataWithSWeights");
@@ -345,41 +346,43 @@ void MakeHistos(RooWorkspace* ws, float bdtCut){
   float theinf = bdtCut-2;
   float thedelta = 15.-theinf;
   int thebin = thedelta/0.5;
-  TH1 *h1_xgb   = mydataw_sgn->createHistogram("h1_xgb",*xgb,Binning(thebin,theinf,15)); 
-  TH1 *h1_L1id  = mydataw_sgn->createHistogram("h1_L1id",*L1id, Binning(33,-4.,7.)); 
-  TH1 *h1_L2id  = mydataw_sgn->createHistogram("h1_L2id",*L2id, Binning(33,-4.,7.)); 
-  TH1 *h1_Bprob = mydataw_sgn->createHistogram("h1_Bprob",*Bprob, Binning(10,0.,1.)); 
-  TH1 *h1_BsLxy = mydataw_sgn->createHistogram("h1_BsLxy",*BsLxy, Binning(10,0.,100.)); 
-  TH1 *h1_Bcos  = mydataw_sgn->createHistogram("h1_Bcos",*Bcos, Binning(10,0.99,1.)); 
-  TH1 *h1_L1pt  = mydataw_sgn->createHistogram("h1_L1pt",*L1pt, Binning(60,0.,30)); 
-  TH1 *h1_L2pt  = mydataw_sgn->createHistogram("h1_L2pt",*L2pt, Binning(40,0.,20)); 
-  TH1 *h1_Kpt   = mydataw_sgn->createHistogram("h1_Kpt",*Kpt, Binning(40,0.,20)); 
-  TH1 *h1_LKdz  = mydataw_sgn->createHistogram("h1_LKdz",*LKdz, Binning(20,0.,1.)); 
+  TH1 *h1_xgb    = mydataw_sgn->createHistogram("h1_xgb",*xgb,Binning(thebin,theinf,15)); 
+  TH1 *h1_L1id   = mydataw_sgn->createHistogram("h1_L1id",*L1id, Binning(33,-4.,7.)); 
+  TH1 *h1_L2id   = mydataw_sgn->createHistogram("h1_L2id",*L2id, Binning(33,-4.,7.)); 
+  TH1 *h1_Bprob  = mydataw_sgn->createHistogram("h1_Bprob",*Bprob, Binning(10,0.,1.)); 
+  TH1 *h1_BsLxy  = mydataw_sgn->createHistogram("h1_BsLxy",*BsLxy, Binning(10,0.,100.)); 
+  TH1 *h1_Bcos   = mydataw_sgn->createHistogram("h1_Bcos",*Bcos, Binning(10,0.99,1.)); 
+  TH1 *h1_L1pt   = mydataw_sgn->createHistogram("h1_L1pt",*L1pt, Binning(60,0.,30)); 
+  TH1 *h1_L2pt   = mydataw_sgn->createHistogram("h1_L2pt",*L2pt, Binning(40,0.,20)); 
+  TH1 *h1_Kpt    = mydataw_sgn->createHistogram("h1_Kpt",*Kpt, Binning(40,0.,20)); 
+  TH1 *h1_LKdz   = mydataw_sgn->createHistogram("h1_LKdz",*LKdz, Binning(20,0.,1.)); 
   TH1 *h1_L1L2dr = mydataw_sgn->createHistogram("h1_L1L2dr",*L1L2dr, Binning(20,0.,2.)); 
-  TH1 *h1_LKdr  = mydataw_sgn->createHistogram("h1_LKdr",*LKdr, Binning(40,0.,1.)); 
-  TH1 *h1_L1iso = mydataw_sgn->createHistogram("h1_L1iso",*L1iso, Binning(30,0.,30.)); 
-  TH1 *h1_Kiso  = mydataw_sgn->createHistogram("h1_Kiso",*Kiso, Binning(30,0.,30.)); 
+  TH1 *h1_LKdr   = mydataw_sgn->createHistogram("h1_LKdr",*LKdr, Binning(40,0.,1.)); 
+  TH1 *h1_L1iso  = mydataw_sgn->createHistogram("h1_L1iso",*L1iso, Binning(30,0.,30.)); 
+  TH1 *h1_Kiso   = mydataw_sgn->createHistogram("h1_Kiso",*Kiso, Binning(30,0.,30.)); 
   TH1 *h1_Passymetry = mydataw_sgn->createHistogram("h1_Passymetry",*Passymetry, Binning(20,-1.,1.)); 
-  TH1 *h1_Kip3d = mydataw_sgn->createHistogram("h1_Kip3d",*Kip3d, Binning(40,-0.2,0.2)); 
+  TH1 *h1_Kip3d      = mydataw_sgn->createHistogram("h1_Kip3d",*Kip3d, Binning(40,-0.2,0.2)); 
+  TH1 *h1_KLmassD0   = mydataw_sgn->createHistogram("h1_KLmassD0",*KLmassD0, Binning(30,0.,6.));
 
   TFile myFileSPlots("myFileSPlots.root","RECREATE");
   myFileSPlots.cd();
-  h1_xgb -> Write();
-  h1_L1id -> Write();
-  h1_L2id -> Write();
+  h1_xgb   -> Write();
+  h1_L1id  -> Write();
+  h1_L2id  -> Write();
   h1_Bprob -> Write();
   h1_BsLxy -> Write();
   h1_Bcos -> Write();
   h1_L1pt -> Write();
   h1_L2pt -> Write();
-  h1_Kpt -> Write();
+  h1_Kpt  -> Write();
   h1_LKdz -> Write();
   h1_L1L2dr -> Write();
-  h1_LKdr -> Write();
-  h1_L1iso -> Write();
-  h1_Kiso -> Write();
+  h1_LKdr   -> Write();
+  h1_L1iso  -> Write();
+  h1_Kiso   -> Write();
   h1_Passymetry -> Write();
-  h1_Kip3d -> Write();
+  h1_Kip3d    -> Write();
+  h1_KLmassD0 -> Write();
 }
 
 // Convert ROOT tree in RooDataset
