@@ -325,6 +325,7 @@ void MakeHistos(RooWorkspace* ws, float bdtCut){
   RooRealVar* Bcos     = ws->var("Bcos");            
   RooRealVar* L1pt     = ws->var("L1pt");         
   RooRealVar* L2pt     = ws->var("L2pt");         
+  RooRealVar* Bpt      = ws->var("Bpt");         
   RooRealVar* Kpt      = ws->var("Kpt");          
   RooRealVar* LKdz     = ws->var("LKdz");            
   RooRealVar* L1L2dr   = ws->var("L1L2dr");          
@@ -354,6 +355,7 @@ void MakeHistos(RooWorkspace* ws, float bdtCut){
   TH1 *h1_Bcos   = mydataw_sgn->createHistogram("h1_Bcos",*Bcos, Binning(10,0.99,1.)); 
   TH1 *h1_L1pt   = mydataw_sgn->createHistogram("h1_L1pt",*L1pt, Binning(60,0.,30)); 
   TH1 *h1_L2pt   = mydataw_sgn->createHistogram("h1_L2pt",*L2pt, Binning(40,0.,20)); 
+  TH1 *h1_Bpt    = mydataw_sgn->createHistogram("h1_Bpt",*Bpt, Binning(60,0.,60)); 
   TH1 *h1_Kpt    = mydataw_sgn->createHistogram("h1_Kpt",*Kpt, Binning(40,0.,20)); 
   TH1 *h1_LKdz   = mydataw_sgn->createHistogram("h1_LKdz",*LKdz, Binning(20,0.,1.)); 
   TH1 *h1_L1L2dr = mydataw_sgn->createHistogram("h1_L1L2dr",*L1L2dr, Binning(20,0.,2.)); 
@@ -374,6 +376,7 @@ void MakeHistos(RooWorkspace* ws, float bdtCut){
   h1_Bcos -> Write();
   h1_L1pt -> Write();
   h1_L2pt -> Write();
+  h1_Bpt -> Write();
   h1_Kpt  -> Write();
   h1_LKdz -> Write();
   h1_L1L2dr -> Write();
@@ -411,6 +414,7 @@ void getDataSet(const char *rootfile, RooWorkspace *ws, float bdtCut, float q2mi
   RooRealVar Bcos("Bcos","Bcos",-1.,1.,"");         
   RooRealVar L1pt("L1pt","L1pt", 0., 5000.,"");       
   RooRealVar L2pt("L2pt","L2pt", 0., 5000.,"");       
+  RooRealVar Bpt("Bpt","Bpt", 0., 5000.,"");       
   RooRealVar Kpt("Kpt","Kpt",   0., 5000.,"");        
   RooRealVar LKdz("LKdz", "LKdz",     0., 50.,"");                 
   RooRealVar L1L2dr("L1L2dr","L1L2dr", 0., 50.,"");                 
@@ -426,6 +430,7 @@ void getDataSet(const char *rootfile, RooWorkspace *ws, float bdtCut, float q2mi
   setall.add(Bcos);
   setall.add(L1pt);
   setall.add(L2pt);
+  setall.add(Bpt);
   setall.add(Kpt);
   setall.add(LKdz);
   setall.add(L1L2dr);
