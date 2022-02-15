@@ -169,8 +169,8 @@ void drawTH1pair(TH1* h1, TH1* h2,
 void mcVsSplots(int q2bin)
 {
   // Input files 
-  TFile *fileMC = new TFile("./files_nonRegr/mc_PFPF_Psi2sBin.root");
-  TFile *fileSPlots = new TFile("./files_nonRegr/splots_PFPF_psi2sBin.root");
+  TFile *fileMC = new TFile("./files_nonRegr/mc_PFPF_JPsiBin__wp5.0.root");
+  TFile *fileSPlots = new TFile("./files_nonRegr/splots_PFPF_JPsiBin___testA__wp5.0.root");
   
   // MC histos 
   TH1F *h1mc_xgb   = (TH1F*)fileMC->Get("h1mc_xgb");
@@ -181,6 +181,7 @@ void mcVsSplots(int q2bin)
   TH1F *h1mc_Bcos  = (TH1F*)fileMC->Get("h1mc_Bcos");
   TH1F *h1mc_L1pt  = (TH1F*)fileMC->Get("h1mc_L1pt");
   TH1F *h1mc_L2pt  = (TH1F*)fileMC->Get("h1mc_L2pt");
+  TH1F *h1mc_Bpt   = (TH1F*)fileMC->Get("h1mc_Bpt");
   TH1F *h1mc_Kpt    = (TH1F*)fileMC->Get("h1mc_Kpt");
   TH1F *h1mc_LKdz   = (TH1F*)fileMC->Get("h1mc_LKdz");
   TH1F *h1mc_L1L2dr = (TH1F*)fileMC->Get("h1mc_L1L2dr");
@@ -189,6 +190,7 @@ void mcVsSplots(int q2bin)
   TH1F *h1mc_Kiso   = (TH1F*)fileMC->Get("h1mc_Kiso");
   TH1F *h1mc_Passymetry = (TH1F*)fileMC->Get("h1mc_Passymetry");
   TH1F *h1mc_Kip3d = (TH1F*)fileMC->Get("h1mc_Kip3d");
+  TH1F *h1mc_KLmassD0 = (TH1F*)fileMC->Get("h1mc_KLmassD0");
 
   // s-Plots output 
   TH1F *h1data_xgb   = (TH1F*)fileSPlots->Get("h1_xgb__xgb");
@@ -199,6 +201,7 @@ void mcVsSplots(int q2bin)
   TH1F *h1data_Bcos  = (TH1F*)fileSPlots->Get("h1_Bcos__Bcos");
   TH1F *h1data_L1pt  = (TH1F*)fileSPlots->Get("h1_L1pt__L1pt");
   TH1F *h1data_L2pt  = (TH1F*)fileSPlots->Get("h1_L2pt__L2pt");
+  TH1F *h1data_Bpt   = (TH1F*)fileSPlots->Get("h1_Bpt__Bpt");
   TH1F *h1data_Kpt    = (TH1F*)fileSPlots->Get("h1_Kpt__Kpt");
   TH1F *h1data_LKdz   = (TH1F*)fileSPlots->Get("h1_LKdz__LKdz");
   TH1F *h1data_L1L2dr = (TH1F*)fileSPlots->Get("h1_L1L2dr__L1L2dr");
@@ -207,16 +210,21 @@ void mcVsSplots(int q2bin)
   TH1F *h1data_Kiso   = (TH1F*)fileSPlots->Get("h1_Kiso__Kiso");
   TH1F *h1data_Passymetry = (TH1F*)fileSPlots->Get("h1_Passymetry__Passymetry");
   TH1F *h1data_Kip3d = (TH1F*)fileSPlots->Get("h1_Kip3d__Kip3d");
+  TH1F *h1data_KLmassD0 = (TH1F*)fileSPlots->Get("h1_KLmassD0__KLmassD0");
 
   // Rebin
   h1mc_L1pt->Rebin();
   h1mc_L2pt->Rebin();
+  h1mc_Bpt->Rebin();
   h1mc_L1iso->Rebin();
   h1mc_Kiso->Rebin();
   h1data_L1pt->Rebin();
   h1data_L2pt->Rebin();
+  h1data_Bpt->Rebin();
   h1data_L1iso->Rebin();
   h1data_Kiso->Rebin();
+  h1mc_KLmassD0->Rebin();
+  h1data_KLmassD0->Rebin();
 
   if (q2bin==2) {
     h1mc_Kiso->Rebin();
@@ -253,6 +261,7 @@ void mcVsSplots(int q2bin)
   int nBinsData_Bcos  = h1data_Bcos->GetNbinsX();
   int nBinsData_L1pt  = h1data_L1pt->GetNbinsX();
   int nBinsData_L2pt  = h1data_L2pt->GetNbinsX();
+  int nBinsData_Bpt   = h1data_Bpt->GetNbinsX();
   int nBinsData_Kpt   = h1data_Kpt->GetNbinsX();
   int nBinsData_LKdz  = h1data_LKdz ->GetNbinsX();
   int nBinsData_L1L2dr = h1data_L1L2dr->GetNbinsX();
@@ -261,6 +270,7 @@ void mcVsSplots(int q2bin)
   int nBinsData_Kiso   = h1data_Kiso->GetNbinsX();
   int nBinsData_Passymetry = h1data_Passymetry->GetNbinsX();
   int nBinsData_Kip3d  = h1data_Kip3d->GetNbinsX();
+  int nBinsData_KLmassD0 = h1data_KLmassD0->GetNbinsX(); 
 
   for (int ii=1; ii<=nBinsData_xgb; ii++)  { 
     if (h1data_xgb->GetBinContent(ii)<0) h1data_xgb->SetBinContent(ii,0); }
@@ -278,6 +288,8 @@ void mcVsSplots(int q2bin)
     if (h1data_L1pt->GetBinContent(ii)<0) h1data_L1pt->SetBinContent(ii,0); }
   for (int ii=1; ii<=nBinsData_L2pt; ii++) { 
     if (h1data_L2pt->GetBinContent(ii)<0) h1data_L2pt->SetBinContent(ii,0); }
+  for (int ii=1; ii<=nBinsData_Bpt; ii++) { 
+    if (h1data_Bpt->GetBinContent(ii)<0) h1data_Bpt->SetBinContent(ii,0); }
   for (int ii=1; ii<=nBinsData_Kpt; ii++) { 
     if (h1data_Kpt->GetBinContent(ii)<0) h1data_Kpt->SetBinContent(ii,0); }
   for (int ii=1; ii<=nBinsData_LKdz; ii++) { 
@@ -294,6 +306,8 @@ void mcVsSplots(int q2bin)
     if (h1data_Passymetry->GetBinContent(ii)<0) h1data_Passymetry->SetBinContent(ii,0); }
   for (int ii=1; ii<=nBinsData_Kip3d; ii++) { 
     if (h1data_Kip3d->GetBinContent(ii)<0) h1data_Kip3d->SetBinContent(ii,0); }
+  for (int ii=1; ii<=nBinsData_KLmassD0; ii++) { 
+    if (h1data_KLmassD0->GetBinContent(ii)<0) h1data_KLmassD0->SetBinContent(ii,0); }
 
   // Plots
   gROOT->SetStyle("Plain");
@@ -307,6 +321,7 @@ void mcVsSplots(int q2bin)
   drawTH1pair(h1data_Bcos,  h1mc_Bcos,   "Bcos",   "a.u.",1.,"Bcos", "./",2, 0, "Data","MC");       
   drawTH1pair(h1data_L1pt,  h1mc_L1pt,   "L1pt",   "a.u.",1.,"L1pt", "./",2, 0, "Data","MC");       
   drawTH1pair(h1data_L2pt,  h1mc_L2pt,   "L2pt",   "a.u.",1.,"L2pt", "./",2, 0, "Data","MC");        
+  drawTH1pair(h1data_Bpt,   h1mc_Bpt,    "Bpt",    "a.u.",1.,"Bpt", "./", 2, 0, "Data","MC");        
   drawTH1pair(h1data_Kpt,   h1mc_Kpt,    "Kpt",    "a.u.",1.,"Kpt",  "./",2, 0, "Data","MC");
   drawTH1pair(h1data_LKdz,  h1mc_LKdz,   "LKdz",   "a.u.",1.,"LKdz", "./",2, 0, "Data","MC");
   drawTH1pair(h1data_L1L2dr, h1mc_L1L2dr,  "L1L2dr",  "a.u.",1.,"L1L2dr","./",2, 0, "Data","MC");       
@@ -315,4 +330,5 @@ void mcVsSplots(int q2bin)
   drawTH1pair(h1data_Kiso,  h1mc_Kiso,   "Kiso",   "a.u.",1.,"Kiso", "./",2, 0, "Data","MC");
   drawTH1pair(h1data_Passymetry, h1mc_Passymetry,  "Passymetry",  "a.u.",1.,"Passymetry","./",2, 0, "Data","MC");      
   drawTH1pair(h1data_Kip3d, h1mc_Kip3d,  "Kip3d",  "a.u.",1.,"Kip3d","./",2, 0, "Data","MC");        
+  drawTH1pair(h1data_KLmassD0, h1mc_KLmassD0,  "KLmassD0",  "a.u.",1.,"KLmassD0","./",2, 0, "Data","MC");  
 }
