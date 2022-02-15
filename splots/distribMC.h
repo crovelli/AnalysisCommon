@@ -30,6 +30,7 @@ class distribMC {
   Float_t         BsLxy;
   Float_t         L1pt;
   Float_t         L2pt;
+  Float_t         Bpt;
   Float_t         Kpt;
   Float_t         Bcos;
   Float_t         LKdz;
@@ -61,6 +62,7 @@ class distribMC {
   TBranch        *b_BsLxy;   //!
   TBranch        *b_L1pt;   //!
   TBranch        *b_L2pt;   //!
+  TBranch        *b_Bpt;   //!
   TBranch        *b_Kpt;   //!
   TBranch        *b_Bcos;   //!
   TBranch        *b_LKdz;   //!
@@ -102,9 +104,11 @@ distribMC::distribMC(TTree *tree) : fChain(0)
   // if parameter tree is not specified (or zero), connect the file
   // used to generate this class and read the Tree.
   if (tree == 0) {          
-    TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MCres.root");
+    TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MCres.root");       // JPsi
+    // TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MCPsi2S.root");     // Psi(2s)
     if (!f || !f->IsOpen()) {
-      f = new TFile("ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MCres.root");
+      f = new TFile("ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MCres.root");                // JPsi   
+      //f = new TFile("ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MCPsi2S.root");            // Psi(2s) 
     }
     f->GetObject("mytreefit",tree);
     
@@ -154,6 +158,7 @@ void distribMC::Init(TTree *tree)
   fChain->SetBranchAddress("BsLxy", &BsLxy, &b_BsLxy);
   fChain->SetBranchAddress("L1pt", &L1pt, &b_L1pt);
   fChain->SetBranchAddress("L2pt", &L2pt, &b_L2pt);
+  fChain->SetBranchAddress("Bpt", &Bpt, &b_Bpt);
   fChain->SetBranchAddress("Kpt", &Kpt, &b_Kpt);
   fChain->SetBranchAddress("Bcos", &Bcos, &b_Bcos);
   fChain->SetBranchAddress("LKdz", &LKdz, &b_LKdz);
