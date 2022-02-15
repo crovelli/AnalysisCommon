@@ -50,6 +50,7 @@ void distribMC::Loop(int q2bin, float bdtCut)
   TH1F *h1mc_Bcos   = new TH1F("h1mc_Bcos","h1mc_Bcos",10,0.99,1.);
   TH1F *h1mc_L1pt   = new TH1F("h1mc_L1pt","h1mc_L1pt",60,0.,30.);
   TH1F *h1mc_L2pt   = new TH1F("h1mc_L2pt","h1mc_L2pt",40,0.,20.);
+  TH1F *h1mc_Bpt    = new TH1F("h1mc_Bpt","h1mc_Bpt",60,0.,60.);
   TH1F *h1mc_Kpt    = new TH1F("h1mc_Kpt","h1mc_Kpt",40,0.,20.);
   TH1F *h1mc_LKdz   = new TH1F("h1mc_LKdz","h1mc_LKdz",20,0.,1.);
   TH1F *h1mc_L1L2dr = new TH1F("h1mc_L1L2dr","h1mc_L1L2dr",20,0.,2.);
@@ -58,6 +59,7 @@ void distribMC::Loop(int q2bin, float bdtCut)
   TH1F *h1mc_Kiso   = new TH1F("h1mc_Kiso","h1mc_Kiso",30,0.,30.);
   TH1F *h1mc_Kip3d  = new TH1F("h1mc_Kip3d","h1mc_Kip3d",40,-0.2,0.2);
   TH1F *h1mc_Passymetry = new TH1F("h1mc_Passymetry","h1mc_Passymetry",20,-1.,1.);
+  TH1F *h1mc_KLmassD0   = new TH1F("h1mc_KLmassD0",  "h1mc_KLmassD0",  30, 0.,6.);
   h1mc_mll    -> Sumw2(); 
   h1mc_bmass  -> Sumw2(); 
   h1mc_xgb    -> Sumw2(); 
@@ -68,6 +70,7 @@ void distribMC::Loop(int q2bin, float bdtCut)
   h1mc_Bcos   -> Sumw2();
   h1mc_L1pt   -> Sumw2();
   h1mc_L2pt   -> Sumw2();
+  h1mc_Bpt    -> Sumw2();
   h1mc_Kpt    -> Sumw2();
   h1mc_LKdz   -> Sumw2();
   h1mc_L1L2dr -> Sumw2();
@@ -76,6 +79,7 @@ void distribMC::Loop(int q2bin, float bdtCut)
   h1mc_Kiso   -> Sumw2();
   h1mc_Kip3d  -> Sumw2();
   h1mc_Passymetry -> Sumw2();
+  h1mc_KLmassD0   -> Sumw2();
 
   // Loop over entries
   Long64_t nentries = fChain->GetEntriesFast();
@@ -107,6 +111,7 @@ void distribMC::Loop(int q2bin, float bdtCut)
     h1mc_Bcos        -> Fill(Bcos);     
     h1mc_L1pt        -> Fill(L1pt);     
     h1mc_L2pt        -> Fill(L2pt);  
+    h1mc_Bpt         -> Fill(Bpt);  
     h1mc_Kpt         -> Fill(Kpt);      
     h1mc_LKdz        -> Fill(LKdz);  
     h1mc_L1L2dr      -> Fill(L1L2dr);   
@@ -115,6 +120,7 @@ void distribMC::Loop(int q2bin, float bdtCut)
     h1mc_Kiso        -> Fill(Kiso);  
     h1mc_Passymetry  -> Fill(Passymetry);  
     h1mc_Kip3d       -> Fill(Kip3d);  
+    h1mc_KLmassD0    -> Fill(KLmassD0);
 
   } // Loop over entries
 
@@ -132,6 +138,7 @@ void distribMC::Loop(int q2bin, float bdtCut)
   h1mc_Bcos        -> Write();  
   h1mc_L1pt        -> Write();  
   h1mc_L2pt        -> Write();  
+  h1mc_Bpt         -> Write();  
   h1mc_Kpt         -> Write();  
   h1mc_LKdz        -> Write();  
   h1mc_L1L2dr      -> Write();  
@@ -140,5 +147,6 @@ void distribMC::Loop(int q2bin, float bdtCut)
   h1mc_Kiso        -> Write();  
   h1mc_Passymetry  -> Write();  
   h1mc_Kip3d       -> Write();  
+  h1mc_KLmassD0    -> Write();
   myfile.Close();
 }
