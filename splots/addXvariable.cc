@@ -58,6 +58,7 @@ void addXvariable(const char* filename) {
   Double_t        BsLxy = 0.;
   Double_t        L1pt = 0.;
   Double_t        L2pt = 0.;
+  Double_t        Bpt = 0.;
   Double_t        Kpt = 0.;
   Double_t        Bcos = 0.;
   Double_t        LKdz = 0.;
@@ -83,6 +84,7 @@ void addXvariable(const char* filename) {
   TBranch        *b_BsLxy;   //!
   TBranch        *b_L1pt;   //!
   TBranch        *b_L2pt;   //!
+  TBranch        *b_Bpt;   //!
   TBranch        *b_Kpt;   //!
   TBranch        *b_Bcos;   //!
   TBranch        *b_LKdz;   //!
@@ -108,6 +110,7 @@ void addXvariable(const char* filename) {
   treeOrig->SetBranchAddress("BsLxy", &BsLxy, &b_BsLxy);
   treeOrig->SetBranchAddress("L1pt", &L1pt, &b_L1pt);
   treeOrig->SetBranchAddress("L2pt", &L2pt, &b_L2pt);
+  treeOrig->SetBranchAddress("Bpt", &Bpt, &b_Bpt);
   treeOrig->SetBranchAddress("Kpt", &Kpt, &b_Kpt);
   treeOrig->SetBranchAddress("Bcos", &Bcos, &b_Bcos);
   treeOrig->SetBranchAddress("LKdz", &LKdz, &b_LKdz);
@@ -139,6 +142,7 @@ void addXvariable(const char* filename) {
     theTreeNew->Branch("BsLxy",  &BsLxy,  "BsLxy/D");
     theTreeNew->Branch("L1pt",   &L1pt,   "L1pt/D");
     theTreeNew->Branch("L2pt",   &L2pt,   "L2pt/D");
+    theTreeNew->Branch("Bpt",    &Bpt,    "Bpt/D");
     theTreeNew->Branch("Kpt",    &Kpt,    "Kpt/D");
     theTreeNew->Branch("Bcos",   &Bcos,   "Bcos/D");
     theTreeNew->Branch("LKdz",   &LKdz,   "LKdz/D");
