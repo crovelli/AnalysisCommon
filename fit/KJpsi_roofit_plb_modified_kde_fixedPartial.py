@@ -214,8 +214,8 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    wspace.factory('SUM::signal(cb_signal,frac*g_signal)')
 
    # other B - bkg
-   wspace.factory('exp_alpha_otherb[-15.0, -100.0, -5.0]')              # chiara da testare: testB
-   # wspace.factory('exp_alpha_otherb[-15.0, -100.0, -1.0]')            # chiara da testare: testA
+   #wspace.factory('exp_alpha_otherb[-15.0, -100.0, -5.0]')              # chiara da testare: testB
+   wspace.factory('exp_alpha_otherb[-15.0, -100.0, -1.0]')            # chiara da testare: testA
    wspace.factory('Exponential::exp_otherb(x,exp_alpha_otherb)')
 
    # K*Jpsi - bkg
