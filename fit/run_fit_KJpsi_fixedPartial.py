@@ -33,7 +33,7 @@ def get_df(root_file_name, tree='mytreefit', branches=['*']):
     return df
 
 if __name__ == "__main__":
-  eleType = 'pf'        # chiara
+  eleType = 'mix'        # chiara
   log = 'log_jpsi_bparkPU_v7.3_{}.csv'.format(eleType)
   info = defaultdict(dict)
 
@@ -53,11 +53,11 @@ if __name__ == "__main__":
   info['pf']['n_mc_jpsi'] = 563421.0
   info['pf']['n_mc_partial'] = 373882.0
 
-  info['mix']['inputfile'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_data_mvaCut0.root'
-  info['mix']['jpsi_mc'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_{}_MCres.root'.format('marker')
-  info['mix']['partial_mc'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_{}_MC_kstarjpsi.root'.format('marker')
-  info['mix']['isgn'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_0_MCres.root'
-  info['mix']['iKstarJpsi_BKG'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_0_MC_kstarjpsi.root'
+  info['mix']['inputfile'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0.root'
+  info['mix']['jpsi_mc'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_{}_MCres.root'.format('marker')
+  info['mix']['partial_mc'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_{}_MC_kstarjpsi.root'.format('marker')
+  info['mix']['isgn'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_0_MCres.root'
+  info['mix']['iKstarJpsi_BKG'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_0_MC_kstarjpsi.root'
   info['mix']['n_mc_jpsi'] = 563421.0
   info['mix']['n_mc_partial'] = 373882.0
 
