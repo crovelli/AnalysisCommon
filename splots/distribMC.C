@@ -10,7 +10,7 @@
 // comparison with sPlots 
 // Select signal and background based on match with MC-truth 
 
-void distribMC::Loop(int q2bin, float bdtCut)
+void distribMC::Loop(int q2bin, float bdtCut, int isPFPF)
 {
   // Define q^2 ranges
   float q2inf = 0;
@@ -37,14 +37,25 @@ void distribMC::Loop(int q2bin, float bdtCut)
   if (q2bin==0) h1mc_xgb = new TH1F("h1mc_xgb","h1mc_xgb",thebin,theinf,12.5);
   TH1F *h1mc_L1id;
   TH1F *h1mc_L2id;
-  if (q2bin!=0) { 
-    h1mc_L1id   = new TH1F("h1mc_L1id","h1mc_L1id",33,-4.,7.);
-    h1mc_L2id   = new TH1F("h1mc_L2id","h1mc_L2id",33,-4.,7.);
-  } 
-  if (q2bin==0) { 
-    h1mc_L1id   = new TH1F("h1mc_L1id","h1mc_L1id",22,-4.,7.);
-    h1mc_L2id   = new TH1F("h1mc_L2id","h1mc_L2id",22,-4.,7.);
-  } 
+  if (isPFPF==1) {
+    if (q2bin!=0) { 
+      h1mc_L1id   = new TH1F("h1mc_L1id","h1mc_L1id",33,-4.,7.);
+      h1mc_L2id   = new TH1F("h1mc_L2id","h1mc_L2id",33,-4.,7.);
+    } 
+    if (q2bin==0) { 
+      h1mc_L1id   = new TH1F("h1mc_L1id","h1mc_L1id",22,-4.,7.);
+      h1mc_L2id   = new TH1F("h1mc_L2id","h1mc_L2id",22,-4.,7.);
+    } 
+  } else {
+    if (q2bin!=0) { 
+      h1mc_L1id   = new TH1F("h1mc_L1id","h1mc_L1id",40,-4.,16.);
+      h1mc_L2id   = new TH1F("h1mc_L2id","h1mc_L2id",40,-4.,16.);
+    } 
+    if (q2bin==0) { 
+      h1mc_L1id   = new TH1F("h1mc_L1id","h1mc_L1id",20,-4.,16.);
+      h1mc_L2id   = new TH1F("h1mc_L2id","h1mc_L2id",20,-4.,16.);
+    } 
+  }
   TH1F *h1mc_Bprob  = new TH1F("h1mc_Bprob","h1mc_Bprob",10,0.,1.);
   TH1F *h1mc_BsLxy  = new TH1F("h1mc_BsLxy","h1mc_BsLxy",10,0.,100.);
   TH1F *h1mc_Bcos   = new TH1F("h1mc_Bcos","h1mc_Bcos",10,0.99,1.);

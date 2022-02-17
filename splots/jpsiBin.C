@@ -38,10 +38,10 @@ using namespace std;
 // see below for implementation
 void DoSPlot(RooWorkspace*);                         
 void MakePlots(RooWorkspace*);                       
-void MakeHistos(RooWorkspace*, float);
+void MakeHistos(RooWorkspace*, float, int);
 void getDataSet(const char *, RooWorkspace*, float, float, float);   
 
-void jpsiBin(const char* workspacefile, const char* roottreefile, float bdtCut)
+void jpsiBin(const char* workspacefile, const char* roottreefile, float bdtCut, int isPFPF)
 {
   // Define q^2 ranges
   float q2inf = 2.90;
@@ -70,7 +70,7 @@ void jpsiBin(const char* workspacefile, const char* roottreefile, float bdtCut)
   MakePlots(ws);
   
   // Save variables in histos
-  MakeHistos(ws, bdtCut);
+  MakeHistos(ws, bdtCut, isPFPF);
 
   // cleanup
   delete ws;
@@ -310,7 +310,7 @@ void MakePlots(RooWorkspace* ws){
 
 
 // Control plots
-void MakeHistos(RooWorkspace* ws, float bdtCut){
+void MakeHistos(RooWorkspace* ws, float bdtCut, int isPFPF){
   
   gStyle->SetOptStat(0);
 
@@ -348,8 +348,15 @@ void MakeHistos(RooWorkspace* ws, float bdtCut){
   float thedelta = 15.-theinf;
   int thebin = thedelta/0.5;
   TH1 *h1_xgb    = mydataw_sgn->createHistogram("h1_xgb",*xgb,Binning(thebin,theinf,15)); 
-  TH1 *h1_L1id   = mydataw_sgn->createHistogram("h1_L1id",*L1id, Binning(33,-4.,7.)); 
-  TH1 *h1_L2id   = mydataw_sgn->createHistogram("h1_L2id",*L2id, Binning(33,-4.,7.)); 
+  TH1 *h1_L1id;
+  TH1 *h1_L2id;
+  if (isPFPF==1) {
+    h1_L1id = mydataw_sgn->createHistogram("h1_L1id",*L1id, Binning(33,-4.,7.)); 
+    h1_L2id = mydataw_sgn->createHistogram("h1_L2id",*L2id, Binning(33,-4.,7.)); 
+  } else {
+    h1_L1id = mydataw_sgn->createHistogram("h1_L1id",*L1id, Binning(40,-4.,16.)); 
+    h1_L2id = mydataw_sgn->createHistogram("h1_L2id",*L2id, Binning(40,-4.,16.)); 
+  }
   TH1 *h1_Bprob  = mydataw_sgn->createHistogram("h1_Bprob",*Bprob, Binning(10,0.,1.)); 
   TH1 *h1_BsLxy  = mydataw_sgn->createHistogram("h1_BsLxy",*BsLxy, Binning(10,0.,100.)); 
   TH1 *h1_Bcos   = mydataw_sgn->createHistogram("h1_Bcos",*Bcos, Binning(10,0.99,1.)); 

@@ -91,7 +91,7 @@ class distribMC {
   virtual Int_t    GetEntry(Long64_t entry);
   virtual Long64_t LoadTree(Long64_t entry);
   virtual void     Init(TTree *tree);
-  virtual void     Loop(int q2bin, float bdtCut);
+  virtual void     Loop(int q2bin, float bdtCut, int isPFPF);
   virtual Bool_t   Notify();
   virtual void     Show(Long64_t entry = -1);
 };
@@ -104,11 +104,11 @@ distribMC::distribMC(TTree *tree) : fChain(0)
   // if parameter tree is not specified (or zero), connect the file
   // used to generate this class and read the Tree.
   if (tree == 0) {          
-    TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MCres.root");       // JPsi
-    // TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MCPsi2S.root");     // Psi(2s)
+    // TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MCres.root");  // JPsi PFPF
+    TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_0_MCres.root");   // JPsi PFLP
     if (!f || !f->IsOpen()) {
-      f = new TFile("ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MCres.root");                // JPsi   
-      //f = new TFile("ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MCPsi2S.root");            // Psi(2s) 
+      // f = new TFile("ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MCres.root");        // JPsi PFPF   
+      f = new TFile("ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_0_MCres.root");            // JPsi PFLP  
     }
     f->GetObject("mytreefit",tree);
     
