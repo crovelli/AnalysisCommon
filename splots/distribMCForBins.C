@@ -21,7 +21,8 @@ void distribMCForBins::Loop(int q2bin)
   if (fChain == 0) return;
 
   // Prepare histos
-  TH1F *h1mc_xgb = new TH1F("h1mc_xgb","h1mc_xgb",54,-12.,15.);
+  // TH1F *h1mc_xgb = new TH1F("h1mc_xgb","h1mc_xgb",54,-12.,15.);
+  TH1F *h1mc_xgb = new TH1F("h1mc_xgb","h1mc_xgb",34, -2.,15.);
   TH1F *h1mc_mll = new TH1F("h1mc_mll","h1mc_mll",60,  1., 5.);
 
   // Sumw2
@@ -42,7 +43,8 @@ void distribMCForBins::Loop(int q2bin)
     // Same selection as applied in data
     if (Bmass>5.7 || Bmass<4.7) continue;
     if (Mll>q2sup || Mll<q2inf) continue;
-    if (xgb<-20)      continue;
+    //if (xgb<-20)      continue;
+    if (xgb<0)        continue;
     if (KLmassD0<2.0) continue;
 
     // HLT and MC-match should be applied already at ntuple level
