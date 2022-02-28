@@ -149,16 +149,17 @@ void drawTH1pair(TH1* h1, TH1* h2,
   TFile fileOut(outputFILE.c_str(), "UPDATE");
   fileOut.cd();
   ratio->Write( ("ratio_" + canvasName).c_str());
-  h2->Write( ("MC_" + canvasName).c_str());
+  h1->Write( ("MC1_" + canvasName).c_str());
+  h2->Write( ("MC2_" + canvasName).c_str());
   fileOut.Close();
 }
 
-void mcBins()
-{
+void mcBins() {
+
   // Input files 
-  TFile *fileJpsi  = new TFile("files_nonRegr/myFileMC_PFLP_JPsi.root");
-  TFile *fileLowQ2 = new TFile("files_nonRegr/myFileMC_PFLP_LowQ2.root");
-  TFile *filePsi2s = new TFile("files_nonRegr/myFileMC_PFLP_Psi2s.root");
+  TFile *fileJpsi  = new TFile("files_nonRegr/mcForBinRatio_PFLP_JPsiBin__wp0.0.root");
+  TFile *fileLowQ2 = new TFile("files_nonRegr/mcForBinRatio_PFLP_LowQ2Bin__wp0.0.root");
+  TFile *filePsi2s = new TFile("files_nonRegr/mcForBinRatio_PFLP_Psi2sBin__wp0.0.root");
   
   // Histos 
   TH1F *h1jpsi_xgb  = (TH1F*)fileJpsi ->Get("h1mc_xgb");
@@ -171,9 +172,9 @@ void mcBins()
 
 
   // Rebin
-  h1jpsi_xgb->Rebin(3);
-  h1lowq2_xgb->Rebin(3);
-  h1psi2s_xgb->Rebin(3);
+  h1jpsi_xgb->Rebin(2);
+  h1lowq2_xgb->Rebin(2);
+  h1psi2s_xgb->Rebin(2);
 
   // Plots
   gROOT->SetStyle("Plain");
