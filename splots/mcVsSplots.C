@@ -64,7 +64,7 @@ void drawTH1pair(TH1* h1, TH1* h2,
       h2->SetBinError(iip1,0);
     } 
   }
-  
+
   h1->SetStats(0);
   h2->SetStats(0);
 
@@ -108,6 +108,7 @@ void drawTH1pair(TH1* h1, TH1* h2,
   h2->Draw("hist E same");
 
   TLegend leg2 (0.65,0.65,0.95,0.85);
+  //TLegend leg2 (0.15,0.65,0.45,0.85);
   leg2.SetFillColor(0);
   leg2.SetFillStyle(0);
   leg2.SetBorderSize(0);
@@ -163,14 +164,15 @@ void drawTH1pair(TH1* h1, TH1* h2,
   fileOut.cd();
   ratio->Write( ("ratio_" + canvasName).c_str());
   h2->Write( ("MC_" + canvasName).c_str());
+  h1->Write( ("Data_" + canvasName).c_str());
   fileOut.Close();
 }
 
 void mcVsSplots(int q2bin)
 {
   // Input files 
-  TFile *fileMC = new TFile("./files_nonRegr/mc_PFPF_JPsiBin__wp5.0.root");
-  TFile *fileSPlots = new TFile("./files_nonRegr/splots_PFPF_JPsiBin___testA__wp5.0.root");
+  TFile *fileMC     = new TFile("files_nonRegr/mc_PFPF_JPsiBin__wp0.0.root");
+  TFile *fileSPlots = new TFile("files_nonRegr/splots_PFPF_JPsiBin___testA__wp0.0.root");
   
   // MC histos 
   TH1F *h1mc_xgb   = (TH1F*)fileMC->Get("h1mc_xgb");
@@ -251,6 +253,11 @@ void mcVsSplots(int q2bin)
     h1data_LKdr->Rebin();
     h1mc_LKdr->Rebin();
   }
+
+  //
+  h1data_xgb->Rebin();
+  h1mc_xgb->Rebin();
+  //
 
   // In sPlots, put bins with <0 weight to zero
   int nBinsData_xgb   = h1data_xgb->GetNbinsX();
