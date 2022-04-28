@@ -33,7 +33,7 @@ def get_df(root_file_name, tree='mytreefit', branches=['*']):
     return df
 
 if __name__ == "__main__":
-  eleType = 'mix'        # chiara
+  eleType = 'pf'        # chiara
   log = 'log_jpsi_bparkPU_v7.3_{}.csv'.format(eleType)
   info = defaultdict(dict)
 
@@ -74,9 +74,9 @@ if __name__ == "__main__":
 
 
   if eleType == 'pf':
-    mvaCut = np.linspace(5.0, 5.0, 1)
+    mvaCut = np.linspace(-20.0, -20.0, 1)
   else:
-    mvaCut = np.linspace(5.0, 5.0, 1)
+    mvaCut = np.linspace(8.0, 8.0, 1)
 
   for cut in mvaCut:
     eff_sig_bdt = np.mean([float(jpsi_mc_branches[i].query(' and '.join([selection['jpsi'], selection['Dmass'], '(xgb > @cut)'])).shape[0]) / info[eleType]['n_mc_jpsi'] for i in nparts])
