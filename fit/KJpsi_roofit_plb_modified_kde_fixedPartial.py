@@ -269,8 +269,6 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    model.plotOn(xframe,RooFit.Name("kstarjpsi"),RooFit.Components("kstarjpsi"),RooFit.Range("Full"),RooFit.FillColor(30),RooFit.LineColor(12),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
    model.plotOn(xframe,RooFit.Name("signal"),RooFit.Components("signal"),RooFit.Range("Full"),RooFit.DrawOption("L"),RooFit.LineStyle(2),RooFit.LineColor(ROOT.kBlue),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected), RooFit.LineWidth(3))
    model.plotOn(xframe, RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineColor(ROOT.kRed) )
- #  c1=canvas_create(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]')  
- #  c1.SaveAs('total_fit_'+outputfile+'.pdf')
    wspace.defineSet('obs', 'x')
    obs  = wspace.set('obs') 
 
@@ -291,7 +289,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    notherB_visible, notherB_visible_err = get_visible_yield_error(obs, results,exp_otherb , notherB)
    nbkg_visible = nKstarJpsi_visible+ncomb_visible+notherB_visible
 
-#   c1=canvas_create(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]')
+ #  c1=canvas_create(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]')
    n_param = results.floatParsFinal().getSize()
    print "chi2",xframe.chiSquare(n_param),"ndof",n_param
    print "edm",results.edm(),"log",results.minNll()
@@ -313,6 +311,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    c1.cd()
    c1.Update()
    c1.SaveAs('total_fit_'+outputfile+'.png')
+   c1.SaveAs('total_fit_'+outputfile+'.root')
    print "signal",nsig_visible,"+/-", nsig_visible_err,"comb",ncomb_visible,"+/-", ncomb_visible_err,"K* J/psi", nKstarJpsi_visible, "+/-",nKstarJpsi_visible_err,"otherB", notherB_visible, "+/-",notherB_visible_err
    residuals(xframe,theBMass,"poutana")
 
