@@ -61,7 +61,7 @@ void jpsiBin(const char* workspacefile, const char* roottreefile, float bdtCut, 
   // Add dataset from converted root tree. 
   // Should be identical to the one in the workspace + extra variables needed for splots
   getDataSet(roottreefile, ws, bdtCut, q2inf, q2sup);
-
+  
   // make a new dataset with sWeights added for every event.
   DoSPlot(ws);
 
@@ -136,8 +136,16 @@ void DoSPlot(RooWorkspace* wspace){
   // background model: K*Jpsi
   std::cout << "K*Jpsi background model" << std::endl;
   //
-  RooRealVar *frac_partial  = wspace->var("frac_partial");
-  RooAbsPdf  *kstarjpsi     = wspace->pdf("kstarjpsi");
+  RooRealVar *frac_partial = wspace->var("frac_partial");
+  RooAbsPdf  *kstarjpsi    = wspace->pdf("kstarjpsi");
+
+
+  // --------------------------------------
+  // background model: K*+Jpsi
+  std::cout << "K*+Jpsi background model" << std::endl;
+  //
+  RooRealVar *frac_kstarplus = wspace->var("frac_kstarplus");
+  RooAbsPdf  *kstarplusjpsi  = wspace->pdf("kstarplusjpsi");
 
     
   // --------------------------------------
@@ -168,9 +176,11 @@ void DoSPlot(RooWorkspace* wspace){
   exp_alpha_otherb->setConstant();  
   exp_alpha_comb->setConstant();
 
+
+
   // Now we use the SPlot class to add SWeights to our data set
   // based on our model and our yield variables
-  SPlotJPsi* sData = new SPlotJPsi("sData","A SPlot", *mydatads, model, RooArgList(*nsignal, *notherB, *ncomb, *frac_partial) );
+  SPlotJPsi* sData = new SPlotJPsi("sData","A SPlot", *mydatads, model, RooArgList(*nsignal, *notherB, *ncomb, *frac_partial, *frac_kstarplus) );
   
   // Check that our weights have the desired properties
   std::cout << "Check SWeights:" << std::endl;
@@ -186,6 +196,9 @@ void DoSPlot(RooWorkspace* wspace){
   
   std::cout << std::endl <<  "K*JPsi background fraction is " << frac_partial->getVal() 
 	    << ".  From sWeights it is " << sData->GetYieldFromSWeight("frac_partial") << std::endl;
+
+  std::cout << std::endl <<  "K*+JPsi background fraction is " << frac_kstarplus->getVal() 
+	    << ".  From sWeights it is " << sData->GetYieldFromSWeight("frac_kstarplus") << std::endl;
   
   std::cout << std::endl;
 
@@ -202,19 +215,20 @@ void MakePlots(RooWorkspace* ws){
   cout << endl;
   
   // get what we need out of the workspace
-  RooAbsPdf* model      = ws->pdf("model");
-  RooAbsPdf* signal     = ws->pdf("signal");
-  RooAbsPdf* exp_otherb = ws->pdf("exp_otherb");
-  RooAbsPdf* exp_comb   = ws->pdf("exp_comb");
-  RooAbsPdf* kstarjpsi  = ws->pdf("kstarjpsi");
-  RooRealVar *x         = ws->var("x");
-  RooRealVar *xgb       = ws->var("xgb");
+  RooAbsPdf* model         = ws->pdf("model");
+  RooAbsPdf* signal        = ws->pdf("signal");
+  RooAbsPdf* exp_otherb    = ws->pdf("exp_otherb");
+  RooAbsPdf* exp_comb      = ws->pdf("exp_comb");
+  RooAbsPdf* kstarjpsi     = ws->pdf("kstarjpsi");
+  RooAbsPdf* kstarplusjpsi = ws->pdf("kstarplusjpsi");
+  RooRealVar *x   = ws->var("x");
+  RooRealVar *xgb = ws->var("xgb");
   x->SetTitle("m(K^{+}e^{+}e^{-}) [GeV]");
   xgb->SetTitle("BDT output");
 
+
   // note, we get the dataset with sWeights
   RooDataSet* mydata = (RooDataSet*) ws->data("mydataWithSWeights");
-
 
   // ------------------------------------------
   // Fit plot
@@ -224,10 +238,11 @@ void MakePlots(RooWorkspace* ws){
   RooPlot* frame = x->frame() ;
   mydata->plotOn(frame, RooFit::Binning(50)) ;
   model->plotOn(frame, LineColor(kRed)) ;
-  model->plotOn(frame, Components(*signal),     Normalization(1.0, RooAbsReal::RelativeExpected), LineColor(4),  LineWidth(2), LineStyle(kDashed));
-  model->plotOn(frame, Components(*exp_otherb), Normalization(1.0, RooAbsReal::RelativeExpected), LineColor(30), LineWidth(2), LineStyle(kDashed));
-  model->plotOn(frame, Components(*exp_comb),   Normalization(1.0, RooAbsReal::RelativeExpected), LineColor(49), LineWidth(2), LineStyle(kDashed));
-  model->plotOn(frame, Components(*kstarjpsi),  Normalization(1.0, RooAbsReal::RelativeExpected), LineColor(1),  LineWidth(2), LineStyle(kDashed));
+  model->plotOn(frame, Components(*signal),        Normalization(1.0, RooAbsReal::RelativeExpected), LineColor(4),  LineWidth(2), LineStyle(kDashed));
+  model->plotOn(frame, Components(*exp_otherb),    Normalization(1.0, RooAbsReal::RelativeExpected), LineColor(30), LineWidth(2), LineStyle(kDashed));
+  model->plotOn(frame, Components(*exp_comb),      Normalization(1.0, RooAbsReal::RelativeExpected), LineColor(49), LineWidth(2), LineStyle(kDashed));
+  model->plotOn(frame, Components(*kstarjpsi),     Normalization(1.0, RooAbsReal::RelativeExpected), LineColor(12),  LineWidth(2), LineStyle(kDashed));
+  model->plotOn(frame, Components(*kstarplusjpsi), Normalization(1.0, RooAbsReal::RelativeExpected), LineColor(46),  LineWidth(2), LineStyle(kDashed));
   frame->SetTitle("Fit of model to discriminating variable");
   cdata->cd(1);
   frame->Draw();
@@ -237,23 +252,36 @@ void MakePlots(RooWorkspace* ws){
   // ------------------------------------------
   // Now use the sWeights to show our variable distribution for B and background.
    
+  // reduce the dataset:
+  mydata->Print();
+
   // create weighted data set
-  RooDataSet * dataw_signal  = new RooDataSet(mydata->GetName(),mydata->GetTitle(),mydata,*mydata->get(),0,"nsignal_sw") ;
-  RooDataSet * dataw_otherb  = new RooDataSet(mydata->GetName(),mydata->GetTitle(),mydata,*mydata->get(),0,"notherB_sw") ;
-  RooDataSet * dataw_comb    = new RooDataSet(mydata->GetName(),mydata->GetTitle(),mydata,*mydata->get(),0,"ncomb_sw") ;
-  RooDataSet * dataw_partial = new RooDataSet(mydata->GetName(),mydata->GetTitle(),mydata,*mydata->get(),0,"frac_partial_sw") ;
+  RooDataSet * dataw_signal    = new RooDataSet("mydataWithSWeights_sig","mydataWithSWeights_sig", mydata,*mydata->get(),0,"nsignal_sw") ;
+  RooDataSet * dataw_otherb    = new RooDataSet("mydataWithSWeights_oth","mydataWithSWeights_oth", mydata,*mydata->get(),0,"notherB_sw") ;
+  RooDataSet * dataw_comb      = new RooDataSet("mydataWithSWeights_com","mydataWithSWeights_com", mydata,*mydata->get(),0,"ncomb_sw") ;
+  RooDataSet * dataw_partial   = new RooDataSet("mydataWithSWeights_par","mydataWithSWeights_par", mydata,*mydata->get(),0,"frac_partial_sw") ;
+  RooDataSet * dataw_kstarplus = new RooDataSet("mydataWithSWeights_ksp","mydataWithSWeights_ksp", mydata,*mydata->get(),0,"frac_kstarplus_sw") ;
+
+  dataw_signal->Print();
+  dataw_otherb->Print();
+  dataw_comb->Print();
+  dataw_partial->Print();
+  dataw_kstarplus->Print();
+
+  Long64_t nEntries = mydata->numEntries();
 
   TCanvas* csignalMass = new TCanvas("csignalMass","sPlot demo mass, signal", 800, 600);  
   RooPlot* fsignalMass = x->frame() ;   
-  dataw_signal->plotOn(fsignalMass, DataError(RooAbsData::SumW2) ) ;
+  dataw_signal->plotOn(fsignalMass, RooFit::Binning(50), DataError(RooAbsData::SumW2) ) ;
   fsignalMass->SetTitle("Analysis BDT");
   csignalMass->cd(1);
   fsignalMass->Draw() ;
   csignalMass->SaveAs("sPlotMassSignal.png");
+  csignalMass->SaveAs("sPlotMassSignal.root");
 
   TCanvas* cotherbMass = new TCanvas("cotherbMass","sPlot demo mass, otherb", 800, 600);  
   RooPlot* fotherbMass = x->frame() ;   
-  dataw_otherb->plotOn(fotherbMass, DataError(RooAbsData::SumW2) ) ;
+  dataw_otherb->plotOn(fotherbMass, RooFit::Binning(50), DataError(RooAbsData::SumW2) ) ;
   fotherbMass->SetTitle("Analysis BDT");
   cotherbMass->cd(1);
   fotherbMass->Draw() ;
@@ -261,7 +289,7 @@ void MakePlots(RooWorkspace* ws){
 
   TCanvas* ccombMass = new TCanvas("ccombMass","sPlot demo mass, comb", 800, 600);  
   RooPlot* fcombMass = x->frame() ;     
-  dataw_comb->plotOn(fcombMass, DataError(RooAbsData::SumW2) ) ;
+  dataw_comb->plotOn(fcombMass, RooFit::Binning(50), DataError(RooAbsData::SumW2) ) ;
   fcombMass->SetTitle("Analysis BDT");
   ccombMass->cd(1);
   fcombMass->Draw() ;
@@ -269,11 +297,19 @@ void MakePlots(RooWorkspace* ws){
 
   TCanvas* cpartialMass = new TCanvas("cpartialMass","sPlot demo mass, partial", 800, 600);  
   RooPlot* fpartialMass = x->frame() ;  
-  dataw_partial->plotOn(fpartialMass, DataError(RooAbsData::SumW2) ) ;
+  dataw_partial->plotOn(fpartialMass, RooFit::Binning(50), DataError(RooAbsData::SumW2) ) ;
   fpartialMass->SetTitle("Analysis BDT");
   cpartialMass->cd(1);
   fpartialMass->Draw() ;
   cpartialMass->SaveAs("sPlotMassPartial.png");
+
+  TCanvas* ckstarplusMass = new TCanvas("ckstarplusMass","sPlot demo mass, kstarplus", 800, 600);  
+  RooPlot* fkstarplusMass = x->frame() ;  
+  dataw_kstarplus->plotOn(fkstarplusMass, RooFit::Binning(50), DataError(RooAbsData::SumW2) ) ;
+  fkstarplusMass->SetTitle("Analysis BDT");
+  ckstarplusMass->cd(1);
+  fkstarplusMass->Draw() ;
+  ckstarplusMass->SaveAs("sPlotMassKStarPlus.png");
 
   TCanvas* csignalXgb = new TCanvas("csignalXgb","sPlot demo bdt, signal", 800, 600);  
   RooPlot* fsignalXgb = xgb->frame() ;   
@@ -282,6 +318,7 @@ void MakePlots(RooWorkspace* ws){
   csignalXgb->cd(1);
   fsignalXgb->Draw() ;
   csignalXgb->SaveAs("sPlotXgbSignal.png");
+  csignalXgb->SaveAs("sPlotXgbSignal.root");
 
   TCanvas* cotherbXgb = new TCanvas("cotherbXgb","sPlot demo bdt, otherb", 800, 600);  
   RooPlot* fotherbXgb = xgb->frame() ;   
@@ -306,6 +343,14 @@ void MakePlots(RooWorkspace* ws){
   cpartialXgb->cd(1);
   fpartialXgb->Draw() ;
   cpartialXgb->SaveAs("sPlotXgbPartial.png");
+
+  TCanvas* ckstarplusXgb = new TCanvas("ckstarplusXgb","sPlot demo bdt, kstarplus", 800, 600);  
+  RooPlot* fkstarplusXgb = xgb->frame() ;  
+  dataw_kstarplus->plotOn(fkstarplusXgb, DataError(RooAbsData::SumW2) ) ;
+  fkstarplusXgb->SetTitle("Analysis BDT");
+  ckstarplusXgb->cd(1);
+  fkstarplusXgb->Draw() ;
+  ckstarplusXgb->SaveAs("sPlotXgbKStarPlus.png");
 }
 
 
@@ -338,8 +383,6 @@ void MakeHistos(RooWorkspace* ws, float bdtCut, int isPFPF){
 
   // note, we get the dataset with sWeights
   RooDataSet* mydata = (RooDataSet*) ws->data("mydataWithSWeights");
-
-  // create weighted data set
   RooDataSet * mydataw_sgn = new RooDataSet(mydata->GetName(),mydata->GetTitle(),mydata,*mydata->get(),0,"nsignal_sw") ;
   mydataw_sgn->Print();
 
@@ -347,7 +390,8 @@ void MakeHistos(RooWorkspace* ws, float bdtCut, int isPFPF){
   float theinf = bdtCut-2;
   float thedelta = 15.-theinf;
   int thebin = thedelta/0.5;
-  TH1 *h1_xgb    = mydataw_sgn->createHistogram("h1_xgb",*xgb,Binning(thebin,theinf,15)); 
+  //TH1 *h1_xgb    = mydataw_sgn->createHistogram("h1_xgb",*xgb,Binning(thebin,theinf,15)); 
+  TH1 *h1_xgb = mydataw_sgn->createHistogram("h1_xgb",*xgb,Binning(16,5.0,13.)); 
   TH1 *h1_L1id;
   TH1 *h1_L2id;
   if (isPFPF==1) {
