@@ -189,17 +189,18 @@ def bkg_fit(tree, outputfile, branches, SavePlot=True):
 
 
 ############################# total fit ##############################
-def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parameters=None, KstarJpsi_pdf=None,comb_parameters=None,Significance_range=None, partial_ratio=None, mvacut="",log='log.csv'):
+def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parameters=None, KstarJpsi_pdf=None, KstarPlusJpsi_pdf=None, comb_parameters=None,Significance_range=None, partial_ratio=None, partial_ratio_kstarplus=None, mvacut="",log='log.csv'):
+
    wspace,dataset,bMass,theBMass = define_workspace_bmass_data("wspace_total",branches[0],tree)
    print "Total"
    #amplitudes
-   wspace.factory('nsignal[100.0, 0.0, 1000000.0]' )
-   wspace.factory('ncomb[10000.0, 0.0, 1000000.0]')
-   wspace.factory('notherB[10000.0, 0.0, 1000000.0]')
-   wspace.factory('frac_partial[1.0, 0.0, 10.0]')
+   wspace.factory('nsignal[10000.0, 0.0, 1000000.0]' )
+   wspace.factory('ncomb[50000.0, 0.0, 1000000.0]')
+   wspace.factory('notherB[1000.0, 0.0, 1000000.0]')
+   wspace.factory('frac_partial[0.3, 0.0, 10.0]')
    wspace.factory('prod::nKstarJpsi(frac_partial,nsignal)')
-
-   #wspace.factory('nKstarJpsi[10000.0, 0.0, 1000000.0]')
+   wspace.factory('frac_kstarplus[0.1, 0.0, 10.0]')
+   wspace.factory('prod::nKstarPlusJpsi(frac_kstarplus,nKstarJpsi)')
 
    # signal
    wspace.factory('mean[5.278e+00, 5.22e+00, 5.5e+00]')
@@ -214,48 +215,53 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    wspace.factory('SUM::signal(cb_signal,frac*g_signal)')
 
    # other B - bkg
-   #wspace.factory('exp_alpha_otherb[-15.0, -100.0, -5.0]')              # chiara da testare: testB
-   wspace.factory('exp_alpha_otherb[-15.0, -100.0, -1.0]')            # chiara da testare: testA
+   wspace.factory('exp_alpha_otherb[-6.0, -100.0, -1.e-4]')
    wspace.factory('Exponential::exp_otherb(x,exp_alpha_otherb)')
 
    # K*Jpsi - bkg
    getattr(wspace, "import")(KstarJpsi_pdf, RooFit.Rename('kstarjpsi'))
+
+   # K*+Jpsi - bkg
+   getattr(wspace, "import")(KstarPlusJpsi_pdf, RooFit.Rename('kstarplusjpsi'))
 
    # combinatorial - bkg
    wspace.factory('exp_alpha_comb[-1.0, -100.0, -1.e-4]')
    wspace.factory('Exponential::exp_comb(x,exp_alpha_comb)')
 
    #sum
-   wspace.factory('SUM::model(nsignal*signal,ncomb*exp_comb,nKstarJpsi*kstarjpsi,notherB*exp_otherb)')
-  
+   wspace.factory('SUM::model(nsignal*signal,ncomb*exp_comb,nKstarJpsi*kstarjpsi,nKstarPlusJpsi*kstarplusjpsi,notherB*exp_otherb)')
+ 
    model = wspace.pdf('model');   
    signal = wspace.pdf('signal');        exp_comb = wspace.pdf('exp_comb')
    exp_otherb = wspace.pdf('exp_otherb')
    kstarjpsi = wspace.pdf('kstarjpsi')
+   kstarplusjpsi = wspace.pdf('kstarplusjpsi')
    nsignal = wspace.var('nsignal');      ncomb = wspace.var('ncomb')
    nKstarJpsi = wspace.obj('nKstarJpsi')
+   nKstarPlusJpsi = wspace.obj('nKstarPlusJpsi')
    notherB = wspace.var('notherB')
    frac_partial = wspace.var('frac_partial')
+   frac_kstarplus = wspace.var('frac_kstarplus')
 
    for par in signal_parameters.keys():
      (wspace.var(par)).setVal(signal_parameters[par])
-     #(wspace.var(par)).setConstant(True)         # chiara, before everything was constant. Now we want to keep mean(s) float
-   wspace.var('width').setConstant(True)          # chiara
-   wspace.var('alpha1').setConstant(True)         # chiara
-   wspace.var('n1').setConstant(True)             # chiara
-   wspace.var('frac').setConstant(True)           # chiara
-   wspace.var('gauss_width').setConstant(True)    # chiara
+     if par not in ['mean', 'gauss_mean']:
+       (wspace.var(par)).setConstant(True)
 
    for par in otherB_parameters.keys():
      (wspace.var(par)).setVal(otherB_parameters[par])
 
    for par in comb_parameters.keys():
      (wspace.var(par)).setVal(comb_parameters[par])
-     (wspace.var(par)).setConstant(True)          # chiara: was not constant
-
+     (wspace.var(par)).setConstant(True)
+     
    if partial_ratio is not None:
      wspace.var('frac_partial').setVal(partial_ratio)
-     #wspace.var('frac_partial').setConstant(True)
+     wspace.var('frac_partial').setConstant(True)
+
+   if partial_ratio_kstarplus is not None:
+     wspace.var('frac_kstarplus').setVal(partial_ratio_kstarplus)
+     wspace.var('frac_kstarplus').setConstant(True)
 
    results = model.fitTo(dataset, RooFit.Extended(True), RooFit.Save(), RooFit.Range(4.7,5.7), RooFit.PrintLevel(-1))
    print results.Print()
@@ -267,8 +273,10 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    model.plotOn(xframe,RooFit.Name("exp_comb"),RooFit.Components("exp_comb"),RooFit.Range("Full"),RooFit.DrawOption("L"),RooFit.VLines(),RooFit.FillColor(49),RooFit.LineColor(49),RooFit.LineStyle(2),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineWidth(3))
    model.plotOn(xframe,RooFit.Name("exp_otherb"),RooFit.Components("exp_otherb"),RooFit.Range("Full"),RooFit.FillColor(30),RooFit.LineColor(30),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
    model.plotOn(xframe,RooFit.Name("kstarjpsi"),RooFit.Components("kstarjpsi"),RooFit.Range("Full"),RooFit.FillColor(30),RooFit.LineColor(12),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
+   model.plotOn(xframe,RooFit.Name("kstarplusjpsi"),RooFit.Components("kstarplusjpsi"),RooFit.Range("Full"),RooFit.FillColor(30),RooFit.LineColor(46),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
    model.plotOn(xframe,RooFit.Name("signal"),RooFit.Components("signal"),RooFit.Range("Full"),RooFit.DrawOption("L"),RooFit.LineStyle(2),RooFit.LineColor(ROOT.kBlue),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected), RooFit.LineWidth(3))
    model.plotOn(xframe, RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineColor(ROOT.kRed) )
+
    wspace.defineSet('obs', 'x')
    obs  = wspace.set('obs') 
 
@@ -286,8 +294,10 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    nsig_visible, nsig_visible_err = get_visible_yield_error(obs, results, signal, nsignal)
    nKstarJpsi_visible = get_visible_yield(obs, results, kstarjpsi , nKstarJpsi)
    nKstarJpsi_visible_err = 0.0
+   nKstarPlusJpsi_visible = get_visible_yield(obs, results, kstarplusjpsi , nKstarPlusJpsi)
+   nKstarPlusJpsi_visible_err = 0.0
    notherB_visible, notherB_visible_err = get_visible_yield_error(obs, results,exp_otherb , notherB)
-   nbkg_visible = nKstarJpsi_visible+ncomb_visible+notherB_visible
+   nbkg_visible = nKstarJpsi_visible+nKstarPlusJpsi_visible+ncomb_visible+notherB_visible
 
  #  c1=canvas_create(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]')
    n_param = results.floatParsFinal().getSize()
@@ -298,6 +308,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    legend = ROOT.TLegend(0.65,0.65,0.92,0.85)
    legend.AddEntry(xframe.findObject("exp_comb"),"Combinatorial","l");
    legend.AddEntry(xframe.findObject("kstarjpsi"),"B -> J/#psiK*","l");
+   legend.AddEntry(xframe.findObject("kstarplusjpsi"),"B -> J/#psiK*+","l");
    legend.AddEntry(xframe.findObject("exp_otherb"),"Other B","l");
    legend.AddEntry(xframe.findObject("signal"),"B -> J/#psiK","l");
    legend.SetLineColor(ROOT.kWhite)
@@ -305,25 +316,24 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    legend.SetTextSize(0.04);
    legend.AddEntry(xframe.findObject("datas"),"Data","lpe");
    legend.Draw();
-   pt=pt_create(mvacut,nsig_visible,nsig_visible_err,nKstarJpsi_visible+ncomb_visible+notherB_visible)
+   pt=pt_create(mvacut,nsig_visible,nsig_visible_err,nbkg_visible)
    pt.Draw()
    CMS_lumi()
    c1.cd()
    c1.Update()
    c1.SaveAs('total_fit_'+outputfile+'.png')
    c1.SaveAs('total_fit_'+outputfile+'.root')
-   print "signal",nsig_visible,"+/-", nsig_visible_err,"comb",ncomb_visible,"+/-", ncomb_visible_err,"K* J/psi", nKstarJpsi_visible, "+/-",nKstarJpsi_visible_err,"otherB", notherB_visible, "+/-",notherB_visible_err
-   residuals(xframe,theBMass,"poutana")
+   print "signal",nsig_visible,"+/-", nsig_visible_err,"comb",ncomb_visible,"+/-", ncomb_visible_err,"K* J/psi", nKstarJpsi_visible, "+/-", nKstarJpsi_visible_err, "K*+ J/psi", nKstarPlusJpsi_visible, "+/-", nKstarPlusJpsi_visible_err, "otherB", notherB_visible, "+/-",notherB_visible_err
+   residuals(xframe,theBMass,outputfile+"_poutana")
 
    saveWS = True
 
    if saveWS:
-     # get likelihood
-
+      # get likelihood
+     ''' 
      nll = model.createNLL(dataset)
      ROOT.RooMinuit(nll).migrad()
      nll_frame = nsignal.frame(RooFit.Bins(30),RooFit.Range(7500.0,10000.0),RooFit.Title("LL and profileLL in nsignal")) ;
-     #nll.plotOn(nll_frame,RooFit.ShiftToZero())
      pll = nll.createProfile(ROOT.RooArgSet(nsignal))
      pll.plotOn(nll_frame,RooFit.LineColor(2),RooFit.ShiftToZero())
      nll_frame.SetMinimum(0);
@@ -333,6 +343,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
      c2.cd()
      c2.Update()
      c2.SaveAs('nll_'+outputfile+'.png')
+     '''
 
      wspace_output = ROOT.RooWorkspace('wspace')
      getattr(wspace_output, "import")(model)
@@ -343,17 +354,20 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
      wspace_output.writeToFile('wspace_'+outputfile+'.root')
 
 
-   csv_header = ['cut', 'nsig_total', 'nsig_total_unc', 'nKstarJpsi_total', 'nKstarJpsi_total_unc', 'nsig', 'nbkg', 'ncomb', 'nKstarJpsi', 'notherB', 'snr', 'chi2']
+   csv_header = ['cut', 'nsig_total', 'nsig_total_unc', 'nKstarJpsi_total', 'nKstarJpsi_total_unc', 'nKstarPlusJpsi_total', 'nKstarPlusJpsi_total_unc', 'nsig', 'nbkg', 'ncomb', 'nKstarJpsi', 'nKstarPlusJpsi', 'notherB', 'snr', 'chi2']
    df = {}
    df['cut'] = mvacut
    df['nsig_total'] = nsignal.getVal()
    df['nsig_total_unc'] = nsignal.getError()
    df['nKstarJpsi_total'] = nKstarJpsi.getVal()
-   df['nKstarJpsi_total_unc'] = 0.0
+   df['nKstarJpsi_total_unc'] = np.sqrt(nKstarJpsi.getVal())
+   df['nKstarPlusJpsi_total'] = nKstarPlusJpsi.getVal()
+   df['nKstarPlusJpsi_total_unc'] = np.sqrt(nKstarPlusJpsi.getVal())
    df['nsig'] = nsig_visible
    df['nbkg'] = nbkg_visible
    df['ncomb'] = ncomb_visible
    df['nKstarJpsi'] = nKstarJpsi_visible
+   df['nKstarPlusJpsi'] = nKstarPlusJpsi_visible
    df['notherB'] = notherB_visible
    df['snr'] = nsig_visible / np.sqrt(nsig_visible + nbkg_visible)
    df['chi2'] = xframe.chiSquare(n_param)
@@ -368,7 +382,6 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    return (nsig_visible, ncomb_visible, nKstarJpsi_visible, notherB_visible, nsignal.getVal() )
 
 
-
 #################################### main ################################
 if __name__ == "__main__":
     import argparse
@@ -380,6 +393,7 @@ if __name__ == "__main__":
     parser.add_argument("--ibkg", dest="ibkg", default="../BDT/TrainingCore/forMeas_xgbmodel_kee_v5.1_12B_Mu9_*_samesign.root", help="Input combinatorial BKG file")
     parser.add_argument("--iotherB", dest="iotherB_BKG", default="OtherB_BKGtree_KJpsiEE.root", help="Input combinatorial BKG file")
     parser.add_argument("--iKstarJpsi_BKG", dest="iKstarJpsi_BKG", default="mc_files/reg/BParkingNANO_2021Mar05_BdToKstarJpsi_Toee_v2_BToKEEAnalyzer_2021Mar12_HLTMu9IP6_mc_tighterPreselectionWODmass_kaon_mva_pf.root", help="Input combinatorial BKG file")
+    parser.add_argument("--iKstarPlusJpsi_BKG", dest="iKstarPlusJpsi_BKG", default="mc_files/reg/BParkingNANO_2021Mar05_BdToKstarJpsi_Toee_v2_BToKEEAnalyzer_2021Mar12_HLTMu9IP6_mc_tighterPreselectionWODmass_kaon_mva_pf.root", help="Input combinatorial BKG file")
     parser.add_argument("--fit_primitive", dest="fit_primtv", default=False, action='store_true', help="primitive fits for fixing params or use defaults")
     parser.add_argument("--skip_realfit", dest="skip_realfit", default=False, action='store_true', help="does not perform the final fit. useful for defining parameters, tests on pdfs")
     parser.add_argument("--sel_primitive", dest="sel_primtv", default=None,  help="runs only the selected primitive fits. Options: sgn bkg_comb bkg_otherb bkg_kstar_kee bkg_kstar_piee. they can be combined with ',' in strings. No spaces")
@@ -387,11 +401,20 @@ if __name__ == "__main__":
     parser.add_argument("--maxx", dest="maxx", default=-1.0,type=float,  help="maxx for integral")
     parser.add_argument("--log", dest="log", default="log.csv", help="log of the fitting results")
     parser.add_argument("--partial_ratio", dest="partial_ratio", default=None, type=float, help="fixing the partially reco. yield")
+    parser.add_argument("--partial_ratio_kstarplus", dest="partial_ratio_kstarplus", default=None, type=float, help="fixing the partially reco. yield")
     args = parser.parse_args()
 
     branches=["Bmass","Mll","xgb","KLmassD0"]
+
+    ### chiara
     cuts = branches[2]+">"+str(args.mva)+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0"
     cuts_samesign = branches[2]+">"+str(args.mva)+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.2"
+    ### chiara
+    #cuts = branches[2]+">8.3 && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0"
+    #cuts_samesign = branches[2]+">8.3 && 2.9<"+branches[1]+" && "+branches[1]+"<3.2"
+    #cuts = branches[2]+"<8.3 && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0"
+    #cuts_samesign = branches[2]+"<8.3 && 2.9<"+branches[1]+" && "+branches[1]+"<3.2"
+
     #cuts = branches[2]+">"+str(args.mva)+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.25" 
     #cuts = branches[2]+">"+str(args.mva)+" && 2.8<"+branches[1]+" && "+branches[1]+"<3.25" + " && " + branches[3] + ">2.0"
 
@@ -405,7 +428,7 @@ if __name__ == "__main__":
       if args.sel_primtv!= None:
          args.sel_primtv = args.sel_primtv.split(",")
       else:
-         args.sel_primtv = ["sgn","bkg_comb","bkg_otherb","bkg_kstarjpsi"]
+         args.sel_primtv = ["sgn","bkg_comb","bkg_otherb","bkg_kstarjpsi","bkg_kstarplusjpsi"]
       print "primitive params"
       if "sgn" in args.sel_primtv:
         tree_sgn = ROOT.TChain('mytreefit')
@@ -436,6 +459,13 @@ if __name__ == "__main__":
         KstarJpsi_pdf = kde_fit(tree_KstarJpsi_cut, args.outputfile+"_KstarJpsiMC", branches, 'kstarjpsi')
         print "finished kde fit for K* J/psi"
 
+      if "bkg_kstarplusjpsi" in args.sel_primtv:
+        tree_KstarPlusJpsi = ROOT.TChain('mytreefit')
+        tree_KstarPlusJpsi.Add(args.iKstarPlusJpsi_BKG)
+        tree_KstarPlusJpsi_cut=tree_KstarPlusJpsi.CopyTree(cuts)
+        KstarPlusJpsi_pdf = kde_fit(tree_KstarPlusJpsi_cut, args.outputfile+"_KstarPlusJpsiMC", branches, 'kstarplusjpsi')
+        print "finished kde fit for K*+ J/psi"
+
     else:
       print "Need to provide MC template"
  
@@ -446,7 +476,7 @@ if __name__ == "__main__":
       if args.minx==-1: args.minx=signal_parameters["mean"]-2*signal_parameters["width"]
       if args.maxx==-1: args.maxx=signal_parameters["mean"]+2*signal_parameters["width"]
 
-      nsig, nbkg,  nKstarJpsi, notherB, nsig_total =total_fit(tree_cut, args.outputfile, branches, signal_parameters,  otherB_parameters, KstarJpsi_pdf,comb_parameters, {"min":args.minx,"max":args.maxx}, args.partial_ratio, str(args.mva), args.log)
+      nsig, nbkg,  nKstarJpsi, notherB, nsig_total =total_fit(tree_cut, args.outputfile, branches, signal_parameters,  otherB_parameters, KstarJpsi_pdf, KstarPlusJpsi_pdf, comb_parameters, {"min":args.minx,"max":args.maxx}, args.partial_ratio, args.partial_ratio_kstarplus, str(args.mva), args.log)
       print "sig",nsig,"comb", nbkg,"K* J/psi",  nKstarJpsi,"otherB", notherB,"all sig", nsig_total
       # combinatorial BKG parameters set but not fixed.
 #      print "sigma",float(nsig)/math.sqrt(nsig+nkjpsi+nbkg),"nsig",float(nsig),"nbkg",float(nbkg),"Kjpsi leak",float(nkjpsi)

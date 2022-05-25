@@ -8,8 +8,6 @@ from rootpy.plotting import Hist
 from root_numpy import fill_hist, array2root, array2tree
 from root_pandas import to_root
 import itertools
-#import PyPDF2
-#import makePlot_fitPeak_unbinned as fit_unbinned
 import os, sys, copy
 import xgboost as xgb
 
@@ -38,28 +36,37 @@ if __name__ == "__main__":
   info = defaultdict(dict)
 
   # chiara - vedi questi
-  br_b2jpsi = 1.02e-3
+  br_b2kjpsi = 1.02e-3
   br_b2kstarjpsi = 1.27e-3 * 2./3.
+  br_b2kstarplusjpsi = 1.43e-3
 
   nparts = range(8)
 
-  info['pf']['inputfile'] = 'ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_data_mvaCut0.root'
-  info['pf']['jpsi_mc'] = 'ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_{}_MCres.root'.format('marker')
-  info['pf']['partial_mc'] = 'ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_{}_MC_kstarjpsi.root'.format('marker')
-  info['pf']['isgn'] = 'ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MCres.root'
-  #####info['pf']['ibkg'] = 'ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_samesign_mvaCut0.root'
-  info['pf']['ibkg'] = 'ottoPFPF/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_samesign_mvaCut0.root'        ### chiara - passare a non regressed
-  info['pf']['iKstarJpsi_BKG'] = 'ottoPFPFnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MC_kstarjpsi.root'
-  info['pf']['n_mc_jpsi'] = 563421.0
-  info['pf']['n_mc_partial'] = 373882.0
+  # PF-PF
+  info['pf']['inputfile'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_data_mvaCut0.root'
+  info['pf']['jpsi_mc'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_{}_MCres.root'.format('marker')
+  info['pf']['partial_mc'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_{}_MC_kstarjpsi.root'.format('marker')
+  info['pf']['kstarplus_mc'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_{}_MC_kstarplusjpsi.root'.format('marker')
+  info['pf']['isgn'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MCres.root'
+  info['pf']['iKstarJpsi_BKG'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MC_kstarjpsi.root'
+  info['pf']['iKstarPlusJpsi_BKG'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_0_MC_kstarplusjpsi.root'
+  info['pf']['n_mc_jpsi'] = 211912.0
+  info['pf']['n_mc_partial'] = 379086.0
+  info['pf']['n_mc_kstarplus'] = 314672.0
+  info['pf']['ibkg'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_samesign_mvaCut0.root'
 
-  info['mix']['inputfile'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0.root'
-  info['mix']['jpsi_mc'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_{}_MCres.root'.format('marker')
-  info['mix']['partial_mc'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_{}_MC_kstarjpsi.root'.format('marker')
-  info['mix']['isgn'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_0_MCres.root'
-  info['mix']['iKstarJpsi_BKG'] = 'ottoPFLPnonReg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_0_MC_kstarjpsi.root'
-  info['mix']['n_mc_jpsi'] = 563421.0
-  info['mix']['n_mc_partial'] = 373882.0
+  # PF-LP
+  info['mix']['inputfile'] = 'otto_LowPtPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0.root'
+  info['mix']['jpsi_mc'] = 'otto_LowPtPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_{}_MCres.root'.format('marker')
+  info['mix']['partial_mc'] = 'otto_LowPtPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_{}_MC_kstarjpsi.root'.format('marker')
+  info['mix']['kstarplus_mc'] = 'otto_LowPtPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_{}_MC_kstarplusjpsi.root'.format('marker')
+  info['mix']['isgn'] = 'otto_LowPtPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_0_MCres.root'
+  info['mix']['iKstarJpsi_BKG'] = 'otto_LowPtPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_0_MC_kstarjpsi.root'
+  info['mix']['iKstarPlusJpsi_BKG'] = 'otto_LowPtPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_0_MC_kstarplusjpsi.root'
+  info['mix']['n_mc_jpsi'] = 211912.0
+  info['mix']['n_mc_partial'] = 379086.0
+  info['mix']['n_mc_kstarplus'] = 314672.0
+  info['mix']['ibkg'] = 'otto_LowPtPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_samesign_mvaCut0.root'
 
   selection = {}
 
@@ -71,24 +78,30 @@ if __name__ == "__main__":
 
   jpsi_mc_branches = [get_df(info[eleType]['jpsi_mc'].replace('marker', str(i)), branches=mc_branches) for i in nparts]
   partial_mc_branches = [get_df(info[eleType]['partial_mc'].replace('marker', str(i)), branches=mc_branches) for i in nparts]
-
+  kstarplus_mc_branches = [get_df(info[eleType]['kstarplus_mc'].replace('marker', str(i)), branches=mc_branches) for i in nparts]
 
   if eleType == 'pf':
-    mvaCut = np.linspace(-20.0, -20.0, 1)
+    mvaCut = np.linspace(5.0, 5.0, 1)               # otto: 8.3
   else:
-    mvaCut = np.linspace(8.0, 8.0, 1)
+    mvaCut = np.linspace(8.0, 8.0, 1)               # otto: 8.6
 
   for cut in mvaCut:
     eff_sig_bdt = np.mean([float(jpsi_mc_branches[i].query(' and '.join([selection['jpsi'], selection['Dmass'], '(xgb > @cut)'])).shape[0]) / info[eleType]['n_mc_jpsi'] for i in nparts])
     eff_partial_bdt = np.mean([float(partial_mc_branches[i].query(' and '.join([selection['jpsi'], selection['Dmass'], '(xgb > @cut)'])).shape[0]) / info[eleType]['n_mc_partial'] for i in nparts])
+    eff_kstarplus_bdt = np.mean([float(kstarplus_mc_branches[i].query(' and '.join([selection['jpsi'], selection['Dmass'], '(xgb > @cut)'])).shape[0]) / info[eleType]['n_mc_kstarplus'] for i in nparts])
 
-    frac_ratio = (eff_partial_bdt / eff_sig_bdt) * (br_b2kstarjpsi / br_b2jpsi)
+
+    frac_ratio = (eff_partial_bdt / eff_sig_bdt) * (br_b2kstarjpsi / br_b2kjpsi)
+    frac_ratio_kstarplus = (eff_kstarplus_bdt / eff_partial_bdt) * (br_b2kstarplusjpsi / br_b2kstarjpsi)
+    total_ratio = ((eff_partial_bdt + eff_kstarplus_bdt) / eff_sig_bdt) * ((br_b2kstarjpsi + br_b2kstarplusjpsi) / br_b2kjpsi)
+
+    print(frac_ratio, frac_ratio_kstarplus)    
 
     if eleType == 'pf':
-      com = 'python KJpsi_roofit_plb_modified_kde_fixedPartial.py -i {} -o jpsi_fixedPartial_{} --isgn={} --iKstarJpsi_BKG={} --ibkg={} --sel_primitive="sgn,bkg_kstarjpsi,bkg_comb" --fit_primitive --partial_ratio={} --mvacut={} --log={}'.format(info[eleType]['inputfile'], eleType, info[eleType]['isgn'], info[eleType]['iKstarJpsi_BKG'], info[eleType]['ibkg'], frac_ratio, cut, log)
+      com = 'python KJpsi_roofit_plb_modified_kde_fixedPartial.py -i {} -o jpsi_fixedPartial_{} --isgn={} --iKstarJpsi_BKG={} --iKstarPlusJpsi_BKG={} --ibkg={} --sel_primitive="sgn,bkg_kstarjpsi,bkg_kstarplusjpsi,bkg_comb" --fit_primitive --partial_ratio={} --partial_ratio_kstarplus={} --mvacut={} --log={}'.format(info[eleType]['inputfile'], eleType, info[eleType]['isgn'], info[eleType]['iKstarJpsi_BKG'], info[eleType]['iKstarPlusJpsi_BKG'], info[eleType]['ibkg'], frac_ratio, frac_ratio_kstarplus, cut, log)
 
     else:
-      com = 'python KJpsi_roofit_plb_modified_kde_fixedPartial.py -i {} -o jpsi_fixedPartial_{} --isgn={} --iKstarJpsi_BKG={} --sel_primitive="sgn,bkg_kstarjpsi" --fit_primitive --partial_ratio={} --mvacut={} --log={}'.format(info[eleType]['inputfile'], eleType, info[eleType]['isgn'], info[eleType]['iKstarJpsi_BKG'], frac_ratio, cut, log)
+      com = 'python KJpsi_roofit_plb_modified_kde_fixedPartial.py -i {} -o jpsi_fixedPartial_{} --isgn={} --iKstarJpsi_BKG={} --iKstarPlusJpsi_BKG={} --ibkg={} --sel_primitive="sgn,bkg_kstarjpsi,bkg_kstarplusjpsi,bkg_comb" --fit_primitive --partial_ratio={} --partial_ratio_kstarplus={} --mvacut={} --log={}'.format(info[eleType]['inputfile'], eleType, info[eleType]['isgn'], info[eleType]['iKstarJpsi_BKG'], info[eleType]['iKstarPlusJpsi_BKG'], info[eleType]['ibkg'], frac_ratio, frac_ratio_kstarplus, cut, log)
 
     os.system(com)
 
