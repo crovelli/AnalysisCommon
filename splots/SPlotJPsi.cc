@@ -302,14 +302,12 @@ void SPlotJPsi::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   
   for(Int_t i = 0; i < constParameters->getSize(); i++) {
     RooRealVar* varTemp = ( dynamic_cast<RooRealVar*>( constParameters->at(i) ) );
-    // cout << "SPlotJPsi constParameters before: " << varTemp->GetName() << " " << varTemp->getVal() << endl;
   }
 
   constParameters->remove(yieldsTmp, kTRUE, kTRUE);
   
   for(Int_t i = 0; i < constParameters->getSize(); i++) {
     RooRealVar* varTemp = ( dynamic_cast<RooRealVar*>( constParameters->at(i) ) );
-    // cout << "SPlotJPsi constParameters after: " << varTemp->GetName() << " " << varTemp->getVal() << endl;
   }
 
   // Set these parameters constant and store them so they can later
@@ -336,7 +334,7 @@ void SPlotJPsi::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   // Hold the value of the fitted yields
   std::vector<double> yieldsHolder;
   
-  for(Int_t i = 0; i < yieldsTmp.getSize(); i++)
+  for(Int_t i = 0; i < yieldsTmp.getSize(); i++) 
     yieldsHolder.push_back( ((RooRealVar*) yieldsTmp.at(i))->getVal());
 
   Int_t nspec = yieldsTmp.getSize();
@@ -391,7 +389,7 @@ void SPlotJPsi::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   RooArgSet * pdfvars = pdf->getVariables();
   pdfvars->Print();
   
-  for (Int_t ievt = 0; ievt <numevents; ievt++) {
+  for (Int_t ievt = 0; ievt <numevents; ievt++) { 
 
     //FIX THIS PART, EVALUATION PROGRESS!!
     RooStats::SetParameters(fSData->get(ievt), pdfvars);
@@ -412,9 +410,14 @@ void SPlotJPsi::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
       }
 	
       // set this yield to 1
-      // !!!  ===> chiara: for K=3 (i.e. K*JPsi bkg) set also nsignal=1 <=== !!!
+      // !!!  ===> chiara: for K=3 (i.e. K*JPsi bkg)  set also nsignal=1    <=== !!!
+      // !!!  ===> chiara: for K=4 (i.e. K*+JPsi bkg) set also nKstarJpsi=1 <=== !!!    
       yieldvars[k]->setVal( 1 ) ;         
       if (k==3) yieldvars[0]->setVal( 1 ) ;        
+      else if (k==4) {
+	yieldvars[0]->setVal( 1 ) ;        
+	yieldvars[3]->setVal( 1 ) ;        
+      }
       
       // evaluate the pdf
 
@@ -436,7 +439,15 @@ void SPlotJPsi::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
       pdfvalues[ievt][k] = f_k ;
       if( !(f_k>1 || f_k<1) )
 	coutW(InputArguments) << "Strange pdf value: " << ievt << " " << k << " " << f_k << std::endl ;
+
+
+      // Put back to zero
       yieldvars[k]->setVal( 0 ) ;
+      if (k==3) yieldvars[0]->setVal( 0 ) ;        
+      else if (k==4) {
+	yieldvars[0]->setVal(0) ;        
+	yieldvars[3]->setVal(0) ;        
+      }
     }
   }
   delete pdfvars;
@@ -470,8 +481,7 @@ void SPlotJPsi::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
     
     // Sum for the denominator
     Double_t dsum(0);
-    for(Int_t k = 0; k < nspec; ++k)
-      dsum += pdfvalues[ievt][k] * yieldvalues[k] ;
+    for(Int_t k = 0; k < nspec; ++k) dsum += pdfvalues[ievt][k] * yieldvalues[k] ;
     
     for(Int_t n=0; n<nspec; ++n)
       for(Int_t j=0; j<nspec; ++j) {
@@ -546,18 +556,17 @@ void SPlotJPsi::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
       // sum for denominator
       Double_t dsum(0);
-      for(Int_t k = 0; k < nspec; ++k)   dsum +=  pdfvalues[ievt][k] * yieldvalues[k] ;
+      for(Int_t k = 0; k < nspec; ++k) dsum +=  pdfvalues[ievt][k] * yieldvalues[k] ;
+
       // covariance weighted pdf for each specief
       for(Int_t n=0; n<nspec; ++n)
    {
      Double_t nsum(0) ;
      for(Int_t j=0; j<nspec; ++j) nsum += covMatrix(n,j) * pdfvalues[ievt][j] ;
-     
 
      //Add the sWeights here!!
      //Include weights,
      //ie events weights are absorbed into sWeight
-
 
      if(includeWeights == kTRUE) sweightvec[n]->setVal(fSData->weight() * nsum/dsum) ;
      else  sweightvec[n]->setVal( nsum/dsum) ;
@@ -569,8 +578,18 @@ void SPlotJPsi::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
          coutE(Contents) << "error: " << nsum/dsum << endl ;
          return;
        }
+     
+     // chiara: to exclude crazy values
+     // with this: plots make sense, but the normalization is gone
+     /*
+     if (fabs(sweightvec[n]->getVal())>1000) {
+       cout << "PRE: k = " << n << ", value = " << sweightvec[n]->getVal() << endl;
+       sweightvec[n]->setVal(0.);
+       cout << "POST: k = " << n << ", value = " << sweightvec[n]->getVal() << endl;
+     }
+     */
    }
-
+      
       sWeightData->add(sweightset) ;
     }
 
@@ -582,10 +601,9 @@ void SPlotJPsi::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   delete sWeightData;
 
   // Restore yield values
-  for(Int_t i = 0; i < yieldsTmp.getSize(); i++)
+  for(Int_t i = 0; i < yieldsTmp.getSize(); i++) 
     ((RooRealVar*) yieldsTmp.at(i))->setVal(yieldsHolder.at(i));
 
-  cout << "Final check for yields: " << endl;
   yieldsTmp.Print();
   
   // Make any variables that were forced to constant no longer constant
