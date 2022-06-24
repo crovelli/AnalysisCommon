@@ -21,7 +21,7 @@ void distribMC::Loop(int q2bin, float bdtCut, int isPFPF)
   if (q2bin==3) { q2inf=4.00; q2sup=4.80; }
 
   if (fChain == 0) return;
-
+  
   float theinf = bdtCut-2;
   float thedelta = 15.-theinf;
   int thebin = thedelta/0.5;
@@ -30,17 +30,21 @@ void distribMC::Loop(int q2bin, float bdtCut, int isPFPF)
     thedelta = 12.5-theinf;
     thebin = thedelta/0.5;
   }
+
   TH1F *h1mc_mll    = new TH1F("h1mc_mll","h1mc_mll",60,  1., 5.);
   TH1F *h1mc_bmass  = new TH1F("h1mc_bmass","h1mc_bmass",60,  4.5, 5.9);
+
   TH1F *h1mc_xgb;
-  if (q2bin!=0) h1mc_xgb = new TH1F("h1mc_xgb","h1mc_xgb",thebin,theinf,15);
-  if (q2bin==0) h1mc_xgb = new TH1F("h1mc_xgb","h1mc_xgb",thebin,theinf,12.5);
+  //if (q2bin!=0) h1mc_xgb = new TH1F("h1mc_xgb","h1mc_xgb",thebin,theinf,15);
+  //if (q2bin==0) h1mc_xgb = new TH1F("h1mc_xgb","h1mc_xgb",thebin,theinf,12.5);
+  h1mc_xgb = new TH1F("h1mc_xgb","h1mc_xgb",24,3.0,15.);
+
   TH1F *h1mc_L1id;
   TH1F *h1mc_L2id;
   if (isPFPF==1) {
     if (q2bin!=0) { 
-      h1mc_L1id   = new TH1F("h1mc_L1id","h1mc_L1id",33,-4.,7.);
-      h1mc_L2id   = new TH1F("h1mc_L2id","h1mc_L2id",33,-4.,7.);
+      h1mc_L1id   = new TH1F("h1mc_L1id","h1mc_L1id",32,-4.,7.);
+      h1mc_L2id   = new TH1F("h1mc_L2id","h1mc_L2id",32,-4.,7.);
     } 
     if (q2bin==0) { 
       h1mc_L1id   = new TH1F("h1mc_L1id","h1mc_L1id",22,-4.,7.);
@@ -61,14 +65,14 @@ void distribMC::Loop(int q2bin, float bdtCut, int isPFPF)
   TH1F *h1mc_Bcos   = new TH1F("h1mc_Bcos","h1mc_Bcos",10,0.99,1.);
   TH1F *h1mc_L1pt   = new TH1F("h1mc_L1pt","h1mc_L1pt",60,0.,30.);
   TH1F *h1mc_L2pt   = new TH1F("h1mc_L2pt","h1mc_L2pt",40,0.,20.);
-  TH1F *h1mc_Bpt    = new TH1F("h1mc_Bpt","h1mc_Bpt",60,0.,60.);
+  TH1F *h1mc_Bpt    = new TH1F("h1mc_Bpt","h1mc_Bpt",80,0.,80.);
   TH1F *h1mc_Kpt    = new TH1F("h1mc_Kpt","h1mc_Kpt",40,0.,20.);
   TH1F *h1mc_LKdz   = new TH1F("h1mc_LKdz","h1mc_LKdz",20,0.,1.);
   TH1F *h1mc_L1L2dr = new TH1F("h1mc_L1L2dr","h1mc_L1L2dr",20,0.,2.);
-  TH1F *h1mc_LKdr   = new TH1F("h1mc_LKdr","h1mc_LKdr",40,0.,1.);
+  TH1F *h1mc_LKdr   = new TH1F("h1mc_LKdr","h1mc_LKdr",40,0.,3.);
   TH1F *h1mc_L1iso  = new TH1F("h1mc_L1iso","h1mc_L1iso",30,0.,30.);
   TH1F *h1mc_Kiso   = new TH1F("h1mc_Kiso","h1mc_Kiso",30,0.,30.);
-  TH1F *h1mc_Kip3d  = new TH1F("h1mc_Kip3d","h1mc_Kip3d",40,-0.2,0.2);
+  TH1F *h1mc_Kip3d  = new TH1F("h1mc_Kip3d","h1mc_Kip3d",14,-0.07,0.07);
   TH1F *h1mc_Passymetry = new TH1F("h1mc_Passymetry","h1mc_Passymetry",20,-1.,1.);
   TH1F *h1mc_KLmassD0   = new TH1F("h1mc_KLmassD0",  "h1mc_KLmassD0",  30, 0.,6.);
   h1mc_mll    -> Sumw2(); 
@@ -103,11 +107,13 @@ void distribMC::Loop(int q2bin, float bdtCut, int isPFPF)
     nb = fChain->GetEntry(jentry);   
     nbytes += nb;
 
+    if (jentry%1000==0) cout << jentry << endl;
+
     // Same selection as applied in data
     if (Bmass>5.7 || Bmass<4.7) continue;
     if (Mll>q2sup || Mll<q2inf) continue;
     if (xgb<bdtCut)   continue;
-    if (KLmassD0<2.0) continue;
+    if (KLmassD0<2.0) continue;      
 
     // HLT and MC-match should be applied already at ntuple level
 
@@ -134,7 +140,6 @@ void distribMC::Loop(int q2bin, float bdtCut, int isPFPF)
     h1mc_KLmassD0    -> Fill(KLmassD0);
 
   } // Loop over entries
-
 
   // Save outputs
   TFile myfile("myFileMC.root","RECREATE");
