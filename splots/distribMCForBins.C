@@ -21,13 +21,22 @@ void distribMCForBins::Loop(int q2bin)
   if (fChain == 0) return;
 
   // Prepare histos
-  // TH1F *h1mc_xgb = new TH1F("h1mc_xgb","h1mc_xgb",54,-12.,15.);
-  TH1F *h1mc_xgb = new TH1F("h1mc_xgb","h1mc_xgb",34, -2.,15.);
-  TH1F *h1mc_mll = new TH1F("h1mc_mll","h1mc_mll",60,  1., 5.);
+  TH1F *h1mc_xgb      = new TH1F("h1mc_xgb",      "h1mc_xgb",      30,  0.0, 15.);
+  TH1F *h1mc_mll      = new TH1F("h1mc_mll",      "h1mc_mll",      60,  1.0,  5.);
+  TH1F *h1mc_Bpt      = new TH1F("h1mc_Bpt",      "h1mc_Bpt",      80,  0.0, 80.); 
+  TH1F *h1mc_KLmassD0 = new TH1F("h1mc_KLmassD0", "h1mc_KLmassD0", 30,  0.0,  6.); 
+  TH1F *h1mc_Ele1pt   = new TH1F("h1mc_Ele1pt",   "h1mc_Ele1pt",   80,  0.0, 40.); 
+  TH1F *h1mc_Ele2pt   = new TH1F("h1mc_Ele2pt",   "h1mc_Ele2pt",   40,  0.0, 20.); 
+  TH1F *h1mc_ElesDr   = new TH1F("h1mc_ElesDr",   "h1mc_ElesDr",   20,  0.0, 2.); 
 
   // Sumw2
   h1mc_xgb -> Sumw2();
   h1mc_mll -> Sumw2();
+  h1mc_Bpt -> Sumw2();
+  h1mc_KLmassD0 -> Sumw2();
+  h1mc_Ele1pt -> Sumw2();
+  h1mc_Ele2pt -> Sumw2();
+  h1mc_ElesDr -> Sumw2();
 
   // Loop over entries
   Long64_t nentries = fChain->GetEntriesFast();
@@ -43,15 +52,20 @@ void distribMCForBins::Loop(int q2bin)
     // Same selection as applied in data
     if (Bmass>5.7 || Bmass<4.7) continue;
     if (Mll>q2sup || Mll<q2inf) continue;
-    //if (xgb<-20)      continue;
     if (xgb<0)        continue;
-    if (KLmassD0<2.0) continue;
 
-    // HLT and MC-match should be applied already at ntuple level
+    //if (KLmassD0<2.0) continue;
+    //if (xgb<8)        continue;
+
 
     // Fill all histos
     h1mc_mll -> Fill(Mll);
     h1mc_xgb -> Fill(xgb);
+    h1mc_Bpt -> Fill(Bpt);
+    h1mc_KLmassD0 -> Fill(KLmassD0);
+    h1mc_Ele1pt -> Fill(L1pt);
+    h1mc_Ele2pt -> Fill(L2pt);
+    h1mc_ElesDr -> Fill(L1L2dr);
 
   } // Loop over entries
 
@@ -61,5 +75,10 @@ void distribMCForBins::Loop(int q2bin)
   myfile.cd();
   h1mc_mll -> Write();
   h1mc_xgb -> Write();
+  h1mc_Bpt -> Write();
+  h1mc_KLmassD0 -> Write();
+  h1mc_Ele1pt -> Write();       
+  h1mc_Ele2pt -> Write();       
+  h1mc_ElesDr -> Write();       
   myfile.Close();
 }
