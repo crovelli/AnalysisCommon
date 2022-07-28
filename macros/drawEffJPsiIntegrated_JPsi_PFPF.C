@@ -1,0 +1,238 @@
+#include "TString.h"
+#include "TGraphErrors.h"
+#include "TCanvas.h"
+#include "TF1.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "TLegend.h"
+#include "TLatex.h"
+#include "TColor.h"
+#include "TVirtualFitter.h"
+#include <iostream>
+
+const TString lumiString = "";
+
+// ----------------------------------------------------------  
+// binning
+const int nEtaBins = 1;
+const int nPtBins = 1;
+const double ptBinLimits[nPtBins+1]  = { 0., 100.};
+const double ptBinCenters[nPtBins]   = { 50. };
+const double ptBinHalfWidth[nPtBins] = { 50. };
+
+
+// ----------------------------------------------------------
+// Signal yield in data and MC: hardcoded inputs
+double dataPassing[nEtaBins][nPtBins] = {
+  { 4.7608e+03 }
+  //{ 5.6354e+03 }    // dR(ele1, ele2) weight
+  //{ 4.6228e+03 }    // pT(ele1) weight
+  //{ 4.7540e+03 }    // pT(ele2) weight
+};
+
+double dataPassingErr[nEtaBins][nPtBins] = {
+  { 7.95e+01 }   
+  //{ 8.81e+01 }   // dR
+  //{ 7.83e+01 }   // pt1
+  //{ 7.94e+01 }   // pt2 
+};
+
+double dataTotal[nEtaBins][nPtBins] = {   
+  { 9.6654e+03 }
+  //{ 9.9666e+03 }  // dR
+  //{ 9.6345e+03 }  // pt1
+  //{ 9.7003e+03 }  // pt2
+};
+
+double dataTotalErr[nEtaBins][nPtBins] = {  
+  { 2.54e+02 }
+  //{ 2.30e+02 }  // dR 
+  //{ 2.79e+02 }  // pt1
+  //{ 2.66e+02 }  // pt2 
+};
+
+double mcPassing[nEtaBins][nPtBins] = {
+  { 42021 }
+  //{ 49532.6 }  // dR
+  //{ 40914.8 }  // pt1
+  //{ 41777.6 }  // pt2
+};
+
+double mcTotal[nEtaBins][nPtBins] = {
+  { 90329 }
+  //{ 90317.7 }  // dR
+  //{ 90453.9 }  // pt1
+  //{ 90475.3 }  // pt2
+};
+
+
+
+void drawResults(){
+  
+  // Now data efficiency with statistical errors
+  double theDataEff[nEtaBins][nPtBins];
+  double theDataEffErr[nEtaBins][nPtBins];
+  for (int ii=0; ii<nEtaBins; ii++) {
+    for (int jj=0; jj<nPtBins; jj++) {
+      theDataEff[ii][jj] = dataPassing[ii][jj]/dataTotal[ii][jj];
+      theDataEffErr[ii][jj] = sqrt(theDataEff[ii][jj]*(1-theDataEff[ii][jj])/dataTotal[ii][jj]);
+    }}
+
+  // Now mc efficiency with statistical errors 
+  double mcPassingErr[nEtaBins][nPtBins];
+  double mcTotalErr[nEtaBins][nPtBins];
+  double theMcEff[nEtaBins][nPtBins];
+  double theMcEffErr[nEtaBins][nPtBins];
+
+  for (int ii=0; ii<nEtaBins; ii++) {
+    for (int jj=0; jj<nPtBins; jj++) {
+      mcPassingErr[ii][jj] = sqrt(mcPassing[ii][jj]);
+      mcTotalErr[ii][jj]   = sqrt(mcTotal[ii][jj]);
+      theMcEff[ii][jj]     = mcPassing[ii][jj]/mcTotal[ii][jj];
+      theMcEffErr[ii][jj]  = sqrt(theMcEff[ii][jj]*(1-theMcEff[ii][jj])/mcTotal[ii][jj]);
+    }}
+
+  // -----------------------------------------
+  std::cout << "Now scale factors:" << std::endl;  
+  std::cout << std::endl;
+  std::cout << std::endl;
+  std::cout << "================================" << std::endl;  
+
+  double sf[nEtaBins][nPtBins];
+  double sfErrTot[nEtaBins][nPtBins];
+  for (int iEta=0; iEta<nEtaBins; iEta++){ 
+    for (int iPt=0; iPt<nPtBins; iPt++){ 
+      sf[iEta][iPt] = theDataEff[iEta][iPt]/theMcEff[iEta][iPt];
+      float sigmaDoD   = theDataEffErr[iEta][iPt]/theDataEff[iEta][iPt];
+      float sigmaMCoMC = theMcEffErr[iEta][iPt]/theMcEff[iEta][iPt];
+      sfErrTot[iEta][iPt] = sf[iEta][iPt]*sqrt( (sigmaDoD*sigmaDoD) + (sigmaMCoMC*sigmaMCoMC) );
+    }
+  }
+
+  // -----------------------------------------
+  std::cout << "dataEff = " << theDataEff[0][0] << " +-" << theDataEffErr[0][0] << std::endl;
+  std::cout << "mcEff = " << theMcEff[0][0] << " +-" << theMcEffErr[0][0] << std::endl;
+  std::cout << "SF = " << sf[0][0] << " +/- " << sfErrTot[0][0] << std::endl;
+  std::cout << "================================" << std::endl;  
+  std::cout << std::endl;
+  std::cout << std::endl;
+  
+  for(int ieta = 0; ieta<nEtaBins; ieta++){
+
+    TString cname = "sfEff";
+    TCanvas *c1 = new TCanvas(cname, cname, 10,10,700,700);
+    c1->SetFillColor(kWhite);
+    c1->Draw();
+    TPad *pad1 = new TPad("main","",0, 0.3, 1.0, 1.0);
+    pad1->SetTopMargin(0.20);
+    pad1->SetBottomMargin(0.02);
+    pad1->SetGrid();
+    TPad *pad2 = new TPad("ratio", "", 0, 0, 1.0, 0.3);
+    pad2->SetTopMargin(0.05);
+    pad2->SetBottomMargin(0.30);
+    pad2->SetGrid();
+
+    pad1->Draw();
+    pad2->Draw();
+
+    // Create and fill arrays for graphs for this eta bin
+    double *dataSlice    = new double[nPtBins];
+    double *dataSliceErr = new double[nPtBins];
+    double *mcSlice      = new double[nPtBins];
+    double *mcSliceErr   = new double[nPtBins];
+    double *sfSlice      = new double[nPtBins];
+    double *sfSliceErr   = new double[nPtBins];
+    for(int ipt = 0; ipt<nPtBins; ipt++){
+      dataSlice   [ipt] = theDataEff[ieta][ipt];
+      dataSliceErr[ipt] = theDataEffErr[ieta][ipt];
+      mcSlice     [ipt] = theMcEff[ieta][ipt];
+      mcSliceErr  [ipt] = theMcEffErr[ieta][ipt];
+      sfSlice     [ipt] = sf[ieta][ipt];
+      sfSliceErr  [ipt] = sfErrTot[ieta][ipt];
+    }
+
+    // Create and configure the graphs   
+    TGraphErrors *grData = new TGraphErrors(nPtBins, ptBinCenters, dataSlice, ptBinHalfWidth, dataSliceErr);
+    TGraphErrors *grMc   = new TGraphErrors(nPtBins, ptBinCenters, mcSlice, ptBinHalfWidth, mcSliceErr);
+    TGraphErrors *grSf   = new TGraphErrors(nPtBins, ptBinCenters, sfSlice, ptBinHalfWidth, sfSliceErr);
+    
+    grData->SetLineColor(kBlack);
+    grData->SetMarkerColor(kBlack);
+    grData->SetMarkerStyle(20);
+    grData->SetMarkerSize(1.);
+
+    int ci = TColor::GetColor("#99ccff");
+    grMc->SetFillColor(kGreen-8);
+    ci = TColor::GetColor("#3399ff");
+    grMc->SetLineColor(kGreen+4);
+    grMc->SetMarkerStyle(22);
+    grMc->SetMarkerColor(kGreen+4);
+    grMc->SetMarkerSize(1.);
+
+    ci = TColor::GetColor("#99ccff");
+    grSf->SetFillColor(kGreen-8);
+    ci = TColor::GetColor("#3399ff");
+    grSf->SetLineColor(kGreen+4);
+    grSf->SetMarkerStyle(20);
+    grSf->SetMarkerColor(kGreen+4);
+    grSf->SetMarkerSize(1.);
+    // grSf->Fit("pol0","","",20,350);
+
+    // Create and configure the dummy histograms on which to draw the graphs
+    TH2F *h1 = new TH2F("dummy1","", 100, 0, 100.5, 100, 0., 1.1);
+    h1->GetYaxis()->SetTitle("Efficiency");
+    h1->SetStats(0);
+    h1->GetXaxis()->SetLabelSize(0);
+    h1->GetXaxis()->SetNdivisions(505);
+    h1->GetXaxis()->SetDecimals();
+    h1->GetYaxis()->SetTitleOffset(0.8);
+    h1->GetYaxis()->SetTitleSize(0.05);
+    TH2F *h2 = new TH2F("dummy2","", 100, 0, 100.5, 100, 0.2, 1.5);
+    h2->GetXaxis()->SetTitle("B p_{T} [GeV]");
+    h2->GetYaxis()->SetTitle("Scale Factor");
+    h2->GetXaxis()->SetTitleOffset(1.0);
+    h2->GetXaxis()->SetTitleSize(0.1);
+    h2->GetYaxis()->SetTitleOffset(0.4);
+    h2->GetYaxis()->SetTitleSize(0.1);
+    h2->GetXaxis()->SetLabelSize(0.08);
+    h2->GetYaxis()->SetLabelSize(0.08);
+    h2->GetYaxis()->SetNdivisions(505);
+    h2->GetYaxis()->SetDecimals();
+    h2->SetStats(0);
+
+    TLegend *leg = new TLegend(0.65,0.1,0.9,0.25);
+    leg->SetFillColor(kWhite);
+    leg->SetFillStyle(0);
+    leg->SetBorderSize(0);
+    leg->AddEntry(grData, "Data", "pl");
+    leg->AddEntry(grMc, "MC (cut&count)", "pFlE");
+
+    TLatex *latLumi = new TLatex(0, 1.15, lumiString);
+
+    //TLatex *latEta = new TLatex(60.0, 0.5, etaLimitsStringArray[ieta]);
+
+
+    // --------------------------------------
+    // Draw the efficiencies
+    pad1->cd();
+    h1->Draw();
+    grMc  ->Draw("2same");
+    grMc  ->Draw("pZ,same");
+    grData->Draw("PEZ,same");
+    leg->Draw("same");
+    //latEta->Draw("same");
+    latLumi->Draw("same");
+    // Draw the scale factors
+    pad2->cd();
+    h2->Draw();
+    grSf  ->Draw("2same");
+    grSf  ->Draw("pEZ,same");
+    // Save into a file
+    TString fname = cname += ".png";
+    c1->Print(fname);
+  }
+
+}
+
+
+
