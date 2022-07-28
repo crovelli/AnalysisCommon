@@ -32,16 +32,15 @@ def residuals(xframe, var,name):
    c3.SaveAs(name+'_pull.png')
 
 
-
-def define_workspace_bmass_data(wspace_name,mB_branch,tree):
+def define_workspace_bmass_data(wspace_name,mB_branch,tree,Bmass_min=4.7):
    wspace = ROOT.RooWorkspace(wspace_name)
    fitvars = ROOT.RooArgSet()
-   bMass = ROOT.RooRealVar(mB_branch, "m(K^{+}e^{+}e^{-})", 4.7, 5.7, "GeV")
+   bMass = ROOT.RooRealVar(mB_branch, "m(K^{+}e^{+}e^{-})", Bmass_min, 5.7, "GeV")
    fitvars.add(bMass)
    dataset = ROOT.RooDataSet('data','data',tree, ROOT.RooArgSet(fitvars))
    theBMassfunc = ROOT.RooFormulaVar("x", "x", "@0", ROOT.RooArgList(bMass) )
    theBMass     = dataset.addColumn(theBMassfunc) ;
-   theBMass.setRange(4.7,5.7);
+   theBMass.setRange(Bmass_min,5.7);
    fitvars.add(theBMass)
    getattr(wspace, "import")(dataset, RooFit.Rename('data'))
    # When a RooWorkspace is set as an attribute of a class, it can trigger a memory error
@@ -49,6 +48,26 @@ def define_workspace_bmass_data(wspace_name,mB_branch,tree):
    atexit.register(wspace.Delete)
    return wspace,dataset,bMass,theBMass
 
+
+def define_workspace_bmass_data_withweight(wspace_name,mB_branch,tree,Bmass_min=4.7):
+   wspace = ROOT.RooWorkspace(wspace_name)
+   fitvars = ROOT.RooArgSet()
+   bMass = ROOT.RooRealVar(mB_branch, "m(K^{+}e^{+}e^{-})", Bmass_min, 5.7, "GeV")
+   weight = ROOT.RooRealVar("weight", "weight", -1, 100, "")  
+   fitvars.add(bMass)
+   fitvars.add(weight)
+   dataset = ROOT.RooDataSet('data','data',tree, ROOT.RooArgSet(fitvars), '', 'weight')
+   dataset.Print("V")
+   print "is weighted = ", dataset.isWeighted()
+   theBMassfunc = ROOT.RooFormulaVar("x", "x", "@0", ROOT.RooArgList(bMass) )
+   theBMass     = dataset.addColumn(theBMassfunc) ;
+   theBMass.setRange(Bmass_min,5.7);
+   fitvars.add(theBMass)
+   getattr(wspace, "import")(dataset, RooFit.Rename('data'))
+   # When a RooWorkspace is set as an attribute of a class, it can trigger a memory error
+   # This is solved in the latest ROOT version > 6.14.08
+   atexit.register(wspace.Delete)
+   return wspace,dataset,bMass,theBMass
 
 def get_visible_yield(obs, results, pdf, amplitude):
    intgral_pdf = pdf.createIntegral(obs,obs,"window")
@@ -96,6 +115,8 @@ def signal_fit(tree, outputfile, branches, SavePlot=True):
    print "edm",results.edm(),"log",results.minNll()
   
    c1=canvas_create(sgnframe,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
+   #c1, top, bottom =canvas_create_pull(sgnframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]',theBMass)
+   #top.cd()
    CMS_lumi()
    if SavePlot:
      c1.SaveAs('sgn_eek_'+outputfile+'.png')
@@ -123,6 +144,8 @@ def otherB_fit(tree, outputfile, branches, SavePlot=True):
    dataset.plotOn(otherb_frame,RooFit.Binning(nbin_data), RooFit.Name("datas"))
    eexp_otherb.plotOn(otherb_frame,RooFit.Name("eexpOB"),RooFit.LineColor(30),RooFit.Normalization(1.0, ROOT.RooAbsReal.RelativeExpected),RooFit.LineWidth(3))
    c1=canvas_create(otherb_frame,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
+   #c1, top, bottom =canvas_create_pull(otherb_frame,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]',theBMass)
+   #top.cd()
    CMS_lumi()
    if SavePlot:
      c1.SaveAs('bkg_otherB_'+outputfile+'.png')
@@ -135,11 +158,12 @@ def otherB_fit(tree, outputfile, branches, SavePlot=True):
    return {"exp_alpha_otherb":params.getRealValue('exp_alpha_otherb')}
 
 ############################ KDE fit #######################
-def kde_fit(tree, outputfile, branches, pdfname, SavePlot=True):
+def kde_fit(tree, outputfile, branches, pdfname, SavePlot=True, par=1.5, Bmass_min=4.7):
    print "KDE - {}".format(pdfname)
-   wspace,dataset,bMass,theBMass = define_workspace_bmass_data("wspace_kde",branches[0],tree)
+   wspace,dataset,bMass,theBMass = define_workspace_bmass_data("wspace_kde",branches[0],tree, Bmass_min=Bmass_min)
    kde_frame=theBMass.frame()
    wspace.factory('KeysPdf::{0}(x,data,MirrorLeft,2.0)'.format(pdfname))
+   wspace.factory('KeysPdf::{0}(x,data,MirrorLeft,{1})'.format(pdfname, par))
    kde = wspace.pdf(pdfname)
 
    dataset.plotOn(kde_frame,RooFit.Binning(nbin_data), RooFit.Name("datas"))
@@ -150,6 +174,8 @@ def kde_fit(tree, outputfile, branches, pdfname, SavePlot=True):
    #wf.Close()
 
    c1=canvas_create(kde_frame,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
+   #c1, top, bottom =canvas_create_pull(kde_frame,Bmass_min,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]',theBMass)
+   #top.cd()
    CMS_lumi()
    if SavePlot:
      c1.SaveAs('bkg_kde_'+outputfile+'_{}.png'.format(pdfname))
@@ -174,7 +200,9 @@ def bkg_fit(tree, outputfile, branches, SavePlot=True):
    dataset.plotOn(combframe,RooFit.Binning(nbin_data), RooFit.Name("datas"))
    eexp_comb.plotOn(combframe,RooFit.Name("eexp_comb"), RooFit.LineColor(49),RooFit.Normalization(1.0, ROOT.RooAbsReal.RelativeExpected),RooFit.LineWidth(3))
    params=eexp_comb.getParameters(ROOT.RooArgSet(bMass))
-   c1=canvas_create(combframe,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV]')
+   c1=canvas_create(combframe,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
+   # c1, top, bottom =canvas_create_pull(combframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]',theBMass)
+   #top.cd()
    CMS_lumi()
    if SavePlot: 
      c1.SaveAs('bkg_comb_'+outputfile+'.png')
@@ -189,15 +217,16 @@ def bkg_fit(tree, outputfile, branches, SavePlot=True):
 
 
 ############################# total fit ##############################
-def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parameters=None, KstarJpsi_pdf=None, KstarPlusJpsi_pdf=None, comb_parameters=None,Significance_range=None, partial_ratio=None, partial_ratio_kstarplus=None, mvacut="",log='log.csv'):
+def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_pdf=None, KstarJpsi_pdf=None, KstarPlusJpsi_pdf=None, comb_parameters=None,Significance_range=None, partial_ratio=None, partial_ratio_kstarplus=None, mvacut="",log='log.csv'):
 
    wspace,dataset,bMass,theBMass = define_workspace_bmass_data("wspace_total",branches[0],tree)
+   #wspace,dataset,bMass,theBMass = define_workspace_bmass_data_withweight("wspace_total",branches[0],tree)
    print "Total"
    #amplitudes
    wspace.factory('nsignal[10000.0, 0.0, 1000000.0]' )
-   wspace.factory('ncomb[50000.0, 0.0, 1000000.0]')
+   wspace.factory('ncomb[500.0, 0.0, 1000000.0]')
    wspace.factory('notherB[1000.0, 0.0, 1000000.0]')
-   wspace.factory('frac_partial[0.3, 0.0, 10.0]')
+   wspace.factory('frac_partial[0.35, 0.0, 10.0]')
    wspace.factory('prod::nKstarJpsi(frac_partial,nsignal)')
    wspace.factory('frac_kstarplus[0.1, 0.0, 10.0]')
    wspace.factory('prod::nKstarPlusJpsi(frac_kstarplus,nKstarJpsi)')
@@ -215,8 +244,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    wspace.factory('SUM::signal(cb_signal,frac*g_signal)')
 
    # other B - bkg
-   wspace.factory('exp_alpha_otherb[-6.0, -100.0, -1.e-4]')
-   wspace.factory('Exponential::exp_otherb(x,exp_alpha_otherb)')
+   getattr(wspace, "import")(otherB_pdf, RooFit.Rename('otherb'))
 
    # K*Jpsi - bkg
    getattr(wspace, "import")(KstarJpsi_pdf, RooFit.Rename('kstarjpsi'))
@@ -225,18 +253,20 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    getattr(wspace, "import")(KstarPlusJpsi_pdf, RooFit.Rename('kstarplusjpsi'))
 
    # combinatorial - bkg
-   wspace.factory('exp_alpha_comb[-1.0, -100.0, -1.e-4]')
+   wspace.factory('exp_alpha_comb[-1.0, -10.0, -1.e-4]')
    wspace.factory('Exponential::exp_comb(x,exp_alpha_comb)')
 
    #sum
-   wspace.factory('SUM::model(nsignal*signal,ncomb*exp_comb,nKstarJpsi*kstarjpsi,nKstarPlusJpsi*kstarplusjpsi,notherB*exp_otherb)')
+   wspace.factory('SUM::model(nsignal*signal,ncomb*exp_comb,nKstarJpsi*kstarjpsi,nKstarPlusJpsi*kstarplusjpsi,notherB*otherb)')
  
    model = wspace.pdf('model');   
-   signal = wspace.pdf('signal');        exp_comb = wspace.pdf('exp_comb')
-   exp_otherb = wspace.pdf('exp_otherb')
+   signal = wspace.pdf('signal');        
+   exp_comb = wspace.pdf('exp_comb')
+   otherb = wspace.pdf('otherb')
    kstarjpsi = wspace.pdf('kstarjpsi')
    kstarplusjpsi = wspace.pdf('kstarplusjpsi')
-   nsignal = wspace.var('nsignal');      ncomb = wspace.var('ncomb')
+   nsignal = wspace.var('nsignal');      
+   ncomb = wspace.var('ncomb')
    nKstarJpsi = wspace.obj('nKstarJpsi')
    nKstarPlusJpsi = wspace.obj('nKstarPlusJpsi')
    notherB = wspace.var('notherB')
@@ -247,21 +277,29 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
      (wspace.var(par)).setVal(signal_parameters[par])
      if par not in ['mean', 'gauss_mean']:
        (wspace.var(par)).setConstant(True)
-
-   for par in otherB_parameters.keys():
-     (wspace.var(par)).setVal(otherB_parameters[par])
-
+   
    for par in comb_parameters.keys():
      (wspace.var(par)).setVal(comb_parameters[par])
      (wspace.var(par)).setConstant(True)
      
    if partial_ratio is not None:
-     wspace.var('frac_partial').setVal(partial_ratio)
-     wspace.var('frac_partial').setConstant(True)
+     wspace.var('frac_partial').setVal(partial_ratio)          
+     # wspace.var('frac_partial').setConstant(True)                # chiara! in questo modo si fissa il rapporto relativo
+
+   # chiara: this is to set a limit on frac_partial
+   #frac_partial_inf = partial_ratio-0.9*partial_ratio;
+   #frac_partial_sup = 2*partial_ratio
+   #print ("chiara: inf, sup, mean = ", frac_partial_inf, frac_partial_sup, partial_ratio)
+   #if partial_ratio is not None:
+   #  wspace.var('frac_partial').setVal(partial_ratio)          
+   #  wspace.var('frac_partial').setRange(frac_partial_inf,frac_partial_sup)       
 
    if partial_ratio_kstarplus is not None:
-     wspace.var('frac_kstarplus').setVal(partial_ratio_kstarplus)
+     wspace.var('frac_kstarplus').setVal(partial_ratio_kstarplus)  
      wspace.var('frac_kstarplus').setConstant(True)
+
+   print('frac_partial = ',frac_partial.getVal())
+   print('frac_kstarplus = ',frac_kstarplus.getVal())
 
    results = model.fitTo(dataset, RooFit.Extended(True), RooFit.Save(), RooFit.Range(4.7,5.7), RooFit.PrintLevel(-1))
    print results.Print()
@@ -271,7 +309,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    dataset.plotOn(xframe,RooFit.Binning(nbin_data), RooFit.Name("datas")) 
 
    model.plotOn(xframe,RooFit.Name("exp_comb"),RooFit.Components("exp_comb"),RooFit.Range("Full"),RooFit.DrawOption("L"),RooFit.VLines(),RooFit.FillColor(49),RooFit.LineColor(49),RooFit.LineStyle(2),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineWidth(3))
-   model.plotOn(xframe,RooFit.Name("exp_otherb"),RooFit.Components("exp_otherb"),RooFit.Range("Full"),RooFit.FillColor(30),RooFit.LineColor(30),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
+   model.plotOn(xframe,RooFit.Name("otherb"),RooFit.Components("otherb"),RooFit.Range("Full"),RooFit.FillColor(30),RooFit.LineColor(30),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
    model.plotOn(xframe,RooFit.Name("kstarjpsi"),RooFit.Components("kstarjpsi"),RooFit.Range("Full"),RooFit.FillColor(30),RooFit.LineColor(12),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
    model.plotOn(xframe,RooFit.Name("kstarplusjpsi"),RooFit.Components("kstarplusjpsi"),RooFit.Range("Full"),RooFit.FillColor(30),RooFit.LineColor(46),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
    model.plotOn(xframe,RooFit.Name("signal"),RooFit.Components("signal"),RooFit.Range("Full"),RooFit.DrawOption("L"),RooFit.LineStyle(2),RooFit.LineColor(ROOT.kBlue),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected), RooFit.LineWidth(3))
@@ -296,20 +334,22 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    nKstarJpsi_visible_err = 0.0
    nKstarPlusJpsi_visible = get_visible_yield(obs, results, kstarplusjpsi , nKstarPlusJpsi)
    nKstarPlusJpsi_visible_err = 0.0
-   notherB_visible, notherB_visible_err = get_visible_yield_error(obs, results,exp_otherb , notherB)
+   notherB_visible, notherB_visible_err = get_visible_yield_error(obs, results, otherb, notherB)
    nbkg_visible = nKstarJpsi_visible+nKstarPlusJpsi_visible+ncomb_visible+notherB_visible
 
- #  c1=canvas_create(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]')
    n_param = results.floatParsFinal().getSize()
    print "chi2",xframe.chiSquare(n_param),"ndof",n_param
    print "edm",results.edm(),"log",results.minNll()
-   c1=canvas_create(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]')
+
+   c1=canvas_create(xframe,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
+   #c1, top, bottom =canvas_create_pull(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]',theBMass)
+   #top.cd()
 
    legend = ROOT.TLegend(0.65,0.65,0.92,0.85)
    legend.AddEntry(xframe.findObject("exp_comb"),"Combinatorial","l");
    legend.AddEntry(xframe.findObject("kstarjpsi"),"B -> J/#psiK*","l");
    legend.AddEntry(xframe.findObject("kstarplusjpsi"),"B -> J/#psiK*+","l");
-   legend.AddEntry(xframe.findObject("exp_otherb"),"Other B","l");
+   legend.AddEntry(xframe.findObject("otherb"),"Other B","l");
    legend.AddEntry(xframe.findObject("signal"),"B -> J/#psiK","l");
    legend.SetLineColor(ROOT.kWhite)
    legend.SetTextFont(42);
@@ -360,9 +400,9 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    df['nsig_total'] = nsignal.getVal()
    df['nsig_total_unc'] = nsignal.getError()
    df['nKstarJpsi_total'] = nKstarJpsi.getVal()
-   df['nKstarJpsi_total_unc'] = np.sqrt(nKstarJpsi.getVal())
+   df['nKstarJpsi_total_unc'] = nKstarJpsi.getPropagatedError(results)
    df['nKstarPlusJpsi_total'] = nKstarPlusJpsi.getVal()
-   df['nKstarPlusJpsi_total_unc'] = np.sqrt(nKstarPlusJpsi.getVal())
+   df['nKstarPlusJpsi_total_unc'] = nKstarPlusJpsi.getPropagatedError(results)
    df['nsig'] = nsig_visible
    df['nbkg'] = nbkg_visible
    df['ncomb'] = ncomb_visible
@@ -404,23 +444,52 @@ if __name__ == "__main__":
     parser.add_argument("--partial_ratio_kstarplus", dest="partial_ratio_kstarplus", default=None, type=float, help="fixing the partially reco. yield")
     args = parser.parse_args()
 
-    branches=["Bmass","Mll","xgb","KLmassD0"]
+    branches=["Bmass","Mll","xgb","KLmassD0","Mu9_IP6"]
 
-    ### chiara
-    cuts = branches[2]+">"+str(args.mva)+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0"
-    cuts_samesign = branches[2]+">"+str(args.mva)+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.2"
-    ### chiara
-    #cuts = branches[2]+">8.3 && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0"
-    #cuts_samesign = branches[2]+">8.3 && 2.9<"+branches[1]+" && "+branches[1]+"<3.2"
-    #cuts = branches[2]+"<8.3 && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0"
-    #cuts_samesign = branches[2]+"<8.3 && 2.9<"+branches[1]+" && "+branches[1]+"<3.2"
 
-    #cuts = branches[2]+">"+str(args.mva)+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.25" 
-    #cuts = branches[2]+">"+str(args.mva)+" && 2.8<"+branches[1]+" && "+branches[1]+"<3.25" + " && " + branches[3] + ">2.0"
+    ### chiara - nominal
+    cuts = branches[2]+">"+str(args.mva)+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0" #+ " && " + branches[4]
+    cuts_otherb = branches[2]+">"+str(args.mva)+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0" #+ " && " + branches[0] + " < 5.2"
+    # 
+    if args.mva < 6.0:
+      cuts_samesign = branches[2]+">"+str(args.mva)+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.2"
+    else:
+      cuts_samesign = branches[2]+"> 6.0 "+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" 
+
+
+    ## chiara: denominator  
+    #cuts = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && "+branches[2]+"> 0" 
+    #cuts_otherb = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && "+branches[2]+"> 0" 
+    #cuts_samesign = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && "+branches[2]+"> 0"
+    
+    ## chiara: failing
+    #cuts = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && (" + branches[2]+"<"+str(args.mva) + " || " + branches[3] + "<2.0)"
+    #cuts_otherb = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && (" + branches[2]+"<"+str(args.mva) + " || " + branches[3] + "<2.0)" 
+    #if args.mva < 6.0:
+    #  cuts_samesign = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && " + branches[2]+"<"+str(args.mva) 
+    #else:
+    #  cuts_samesign = branches[2]+"< 6.0 "+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" 
+
+    ## chiara: denominator BDT on top of antiDO
+    #cuts = "2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0"
+    #cuts_otherb = "2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0" 
+    #cuts_samesign = "2.9<"+branches[1]+" && "+branches[1]+"<3.2"
+
+    ## chiara: denominator antoDo on top of BDT 
+    #cuts = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && " + branches[2]+">"+str(args.mva)
+    #cuts_otherb = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && " + branches[2]+">"+str(args.mva)
+    #cuts_samesign = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && " + branches[2]+"> 6.0"
+
+
+    print "cuts = ", cuts  
+    print "cuts_otherb = ", cuts_otherb  
+    print "cuts_samesign = ", cuts_samesign  
+
+
+
 
     args.outputfile+="_wp"+str(args.mva)
 
-    otherB_parameters={'exp_alpha_otherb':-5.099}
     comb_parameters={'exp_alpha_comb':-1.50615}
 
     print "start"
@@ -441,9 +510,9 @@ if __name__ == "__main__":
       if "bkg_otherb" in args.sel_primtv:
         tree_otherB = ROOT.TChain('mytreefit')
         tree_otherB.Add(args.iotherB_BKG)
-        tree_otherB_cut=tree_otherB.CopyTree(cuts)
-        otherB_parameters = otherB_fit(tree_otherB_cut, args.outputfile+"_otherBMC", branches)
-        print "parameters otherB BKG",  otherB_parameters['exp_alpha_otherb']
+        tree_otherB_cut=tree_otherB.CopyTree(cuts_otherb)
+        otherB_pdf = kde_fit(tree_otherB_cut, args.outputfile+"_otherBMC", branches, 'otherb', par=2.0, Bmass_min=4.5)   
+        print "finished kde fit for other B"
     
       if "bkg_comb" in args.sel_primtv:
         tree_bkg = ROOT.TChain('mytreefit')
@@ -463,7 +532,7 @@ if __name__ == "__main__":
         tree_KstarPlusJpsi = ROOT.TChain('mytreefit')
         tree_KstarPlusJpsi.Add(args.iKstarPlusJpsi_BKG)
         tree_KstarPlusJpsi_cut=tree_KstarPlusJpsi.CopyTree(cuts)
-        KstarPlusJpsi_pdf = kde_fit(tree_KstarPlusJpsi_cut, args.outputfile+"_KstarPlusJpsiMC", branches, 'kstarplusjpsi')
+        KstarPlusJpsi_pdf = kde_fit(tree_KstarPlusJpsi_cut, args.outputfile+"_KstarPlusJpsiMC", branches, 'kstarplusjpsi', par=2.0)
         print "finished kde fit for K*+ J/psi"
 
     else:
@@ -476,7 +545,7 @@ if __name__ == "__main__":
       if args.minx==-1: args.minx=signal_parameters["mean"]-2*signal_parameters["width"]
       if args.maxx==-1: args.maxx=signal_parameters["mean"]+2*signal_parameters["width"]
 
-      nsig, nbkg,  nKstarJpsi, notherB, nsig_total =total_fit(tree_cut, args.outputfile, branches, signal_parameters,  otherB_parameters, KstarJpsi_pdf, KstarPlusJpsi_pdf, comb_parameters, {"min":args.minx,"max":args.maxx}, args.partial_ratio, args.partial_ratio_kstarplus, str(args.mva), args.log)
+      nsig, nbkg,  nKstarJpsi, notherB, nsig_total =total_fit(tree_cut, args.outputfile, branches, signal_parameters,  otherB_pdf, KstarJpsi_pdf, KstarPlusJpsi_pdf, comb_parameters, {"min":args.minx,"max":args.maxx}, args.partial_ratio, args.partial_ratio_kstarplus, str(args.mva), args.log)
       print "sig",nsig,"comb", nbkg,"K* J/psi",  nKstarJpsi,"otherB", notherB,"all sig", nsig_total
       # combinatorial BKG parameters set but not fixed.
 #      print "sigma",float(nsig)/math.sqrt(nsig+nkjpsi+nbkg),"nsig",float(nsig),"nbkg",float(nbkg),"Kjpsi leak",float(nkjpsi)
