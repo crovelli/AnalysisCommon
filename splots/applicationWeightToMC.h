@@ -23,6 +23,10 @@ class applicationWeightToMC {
   
   // Declaration of leaf types
   Double_t        xgb;
+  Double_t        weightElePt1;
+  Double_t        weightElePt2;
+  Double_t        weightKPt;
+  Double_t        weightElesDr;
   Float_t         Bmass;
   Float_t         Mll;
   Float_t         Npv;
@@ -55,7 +59,11 @@ class applicationWeightToMC {
   Float_t         Mu12_IP6;
   
   // List of branches
-  TBranch        *b_xgb;   //!
+  TBranch        *b_xgb;   //! 
+  TBranch        *b_weightElePt1;     //!
+  TBranch        *b_weightElePt2;     //!
+  TBranch        *b_weightKPt;     //!
+  TBranch        *b_weightElesDr;     //!
   TBranch        *b_Bmass;   //!
   TBranch        *b_Mll;   //!
   TBranch        *b_Npv;   //!
@@ -93,22 +101,9 @@ class applicationWeightToMC {
   virtual Int_t    GetEntry(Long64_t entry);
   virtual Long64_t LoadTree(Long64_t entry);
   virtual void     Init(TTree *tree);
-  virtual void     Loop();
+  virtual void     Loop(int theVariable);
   virtual Bool_t   Notify();
   virtual void     Show(Long64_t entry = -1);
-
-  // To compute weights
-  float GetEle1ptWeight(float L1pt);
-  float GetEle2ptWeight(float L2pt);
-  float GetElesDrWeight(float L1L2dr);
-  
-  // For weights application
-  std::vector<Double_t> anweightEle1pt_;
-  std::vector<Double_t> anweightEle2pt_;
-  std::vector<Double_t> anweightElesDr_;
-  std::vector<Double_t> lowedgeEle1pt_;
-  std::vector<Double_t> lowedgeEle2pt_;
-  std::vector<Double_t> lowedgeElesDr_;
 };
 
 #endif
@@ -119,11 +114,9 @@ applicationWeightToMC::applicationWeightToMC(TTree *tree) : fChain(0)
   // if parameter tree is not specified (or zero), connect the file
   // used to generate this class and read the Tree.
   if (tree == 0) {
-    TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_ALL_MCres.root");
-    //TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MCres.root");
+    TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MCres____withWeights.root");
     if (!f || !f->IsOpen()) {
-      f = new TFile("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_ALL_MCres.root");
-      //f = new TFile("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MCres.root");
+      f = new TFile("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MCres____withWeights.root");
     }
     f->GetObject("mytreefit",tree);
     
@@ -159,14 +152,6 @@ Long64_t applicationWeightToMC::LoadTree(Long64_t entry)
 
 void applicationWeightToMC::Init(TTree *tree)
 {
-  // The Init() function is called when the selector needs to initialize
-  // a new tree or chain. Typically here the branch addresses and branch
-  // pointers of the tree will be set.
-  // It is normally not necessary to make changes to the generated
-  // code, but the routine can be extended by the user if needed.
-  // Init() will be called many times when running on PROOF
-  // (once per file to be processed).
-  
   // Set branch addresses and branch pointers
   if (!tree) return;
   fChain = tree;
@@ -174,6 +159,10 @@ void applicationWeightToMC::Init(TTree *tree)
   fChain->SetMakeClass(1);
   
   fChain->SetBranchAddress("xgb", &xgb, &b_xgb);
+  fChain->SetBranchAddress("weightElePt1", &weightElePt1, &b_weightElePt1);  
+  fChain->SetBranchAddress("weightElePt2", &weightElePt2, &b_weightElePt2);  
+  fChain->SetBranchAddress("weightKPt", &weightKPt, &b_weightKPt);  
+  fChain->SetBranchAddress("weightElesDr", &weightElesDr, &b_weightElesDr);
   fChain->SetBranchAddress("Bmass", &Bmass, &b_Bmass);
   fChain->SetBranchAddress("Mll", &Mll, &b_Mll);
   fChain->SetBranchAddress("Npv", &Npv, &b_Npv);
