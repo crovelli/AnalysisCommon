@@ -23,52 +23,162 @@ const double ptBinHalfWidth[nPtBins] = { 50. };
 
 // ----------------------------------------------------------
 // Signal yield in data and MC: hardcoded inputs
-double dataPassing[nEtaBins][nPtBins] = {
-  { 4.7608e+03 }
-  //{ 5.6354e+03 }    // dR(ele1, ele2) weight
-  //{ 4.6228e+03 }    // pT(ele1) weight
-  //{ 4.7540e+03 }    // pT(ele2) weight
+double dataPassingFull[nEtaBins][nPtBins] = {
+  { 4.7608e+03 }      
 };
 
-double dataPassingErr[nEtaBins][nPtBins] = {
-  { 7.95e+01 }   
-  //{ 8.81e+01 }   // dR
-  //{ 7.83e+01 }   // pt1
-  //{ 7.94e+01 }   // pt2 
+double dataPassingAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
+  { 4.7608e+03 }      
 };
 
-double dataTotal[nEtaBins][nPtBins] = {   
-  { 9.6654e+03 }
-  //{ 9.9666e+03 }  // dR
-  //{ 9.6345e+03 }  // pt1
-  //{ 9.7003e+03 }  // pt2
+double dataPassingBdtWrtAntiD0[nEtaBins][nPtBins] = {
+  { 4.7608e+03 }      
 };
 
-double dataTotalErr[nEtaBins][nPtBins] = {  
-  { 2.54e+02 }
-  //{ 2.30e+02 }  // dR 
-  //{ 2.79e+02 }  // pt1
-  //{ 2.66e+02 }  // pt2 
+double dataPassingAntiD0WrtBdt0[nEtaBins][nPtBins] = {
+  { 9.1590e+03 }      
 };
 
-double mcPassing[nEtaBins][nPtBins] = {
-  { 42021 }
-  //{ 49532.6 }  // dR
-  //{ 40914.8 }  // pt1
-  //{ 41777.6 }  // pt2
+double dataPassingErrFull[nEtaBins][nPtBins] = {
+  { 7.95e+01 }     
 };
 
-double mcTotal[nEtaBins][nPtBins] = {
-  { 90329 }
-  //{ 90317.7 }  // dR
-  //{ 90453.9 }  // pt1
-  //{ 90475.3 }  // pt2
+double dataPassingErrAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
+  { 7.95e+01 }     
+};
+
+double dataPassingErrBdtWrtAntiD0[nEtaBins][nPtBins] = {
+  { 7.95e+01 }     
+};
+double dataPassingErrAntiD0WrtBdt0[nEtaBins][nPtBins] = {
+  { 351. }     
+};
+
+double dataTotalFull[nEtaBins][nPtBins] = {
+  { 9.6654e+03 }      
+};
+
+double dataTotalAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
+  { 5.2079e+03 }      
+};
+
+double dataTotalBdtWrtAntiD0[nEtaBins][nPtBins] = {
+  { 9.1590e+03 }      
+};
+
+double dataTotalAntiD0WrtBdt0[nEtaBins][nPtBins] = {
+  { 9.6654e+03 }      
+};
+
+double dataTotalErrFull[nEtaBins][nPtBins] = {
+  { 254. }      
+};
+
+double dataTotalErrAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
+  { 84.2 }      
+};
+
+double dataTotalErrBdtWrtAntiD0[nEtaBins][nPtBins] = {
+  { 351. }      
+};
+
+double dataTotalErrAntiD0WrtBdt0[nEtaBins][nPtBins] = {
+  { 254. }      
+};
+
+double mcPassingFull[nEtaBins][nPtBins] = {
+  { 42021 }      
+};
+
+double mcPassingAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
+  { 42021 }      
+};
+
+double mcPassingBdtWrtAntiD0[nEtaBins][nPtBins] = {
+  { 42021 }      
+};
+
+double mcPassingAntiD0WrtBdt0[nEtaBins][nPtBins] = {
+  { 79251 }      
+};
+
+double mcTotalFull[nEtaBins][nPtBins] = {
+  { 90329 }      
+};
+
+double mcTotalAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
+  { 46986 }      
+};
+
+double mcTotalBdtWrtAntiD0[nEtaBins][nPtBins] = {
+  { 79251 }      
+};
+
+double mcTotalAntiD0WrtBdt0[nEtaBins][nPtBins] = {
+  { 90329 }      
 };
 
 
 
-void drawResults(){
-  
+
+void drawResults( int whichEff){
+
+  double dataPassing[nEtaBins][nPtBins]; 
+  double dataTotal[nEtaBins][nPtBins]; 
+  double dataPassingErr[nEtaBins][nPtBins]; 
+  double dataTotalErr[nEtaBins][nPtBins]; 
+  double mcPassing[nEtaBins][nPtBins]; 
+  double mcTotal[nEtaBins][nPtBins]; 
+  //
+  if(whichEff==1) {
+    for (int ii=0; ii<nEtaBins; ii++) {
+      for (int jj=0; jj<nPtBins; jj++) {
+	dataPassing[ii][jj]    = dataPassingFull[ii][jj];
+	dataTotal[ii][jj]      = dataTotalFull[ii][jj];
+	dataPassingErr[ii][jj] = dataPassingErrFull[ii][jj];
+	dataTotalErr[ii][jj]   = dataTotalErrFull[ii][jj];
+	mcPassing[ii][jj]      = mcPassingFull[ii][jj];
+	mcTotal[ii][jj]        = mcTotalFull[ii][jj];
+      }}
+  }
+  //
+  if(whichEff==3) {
+    for (int ii=0; ii<nEtaBins; ii++) {
+      for (int jj=0; jj<nPtBins; jj++) {
+	dataPassing[ii][jj]    = dataPassingAntiD0WrtNominalBdt[ii][jj];
+	dataTotal[ii][jj]      = dataTotalAntiD0WrtNominalBdt[ii][jj];
+	dataPassingErr[ii][jj] = dataPassingErrAntiD0WrtNominalBdt[ii][jj];
+	dataTotalErr[ii][jj]   = dataTotalErrAntiD0WrtNominalBdt[ii][jj];
+	mcPassing[ii][jj]      = mcPassingAntiD0WrtNominalBdt[ii][jj];
+	mcTotal[ii][jj]        = mcTotalAntiD0WrtNominalBdt[ii][jj];
+      }}
+  }
+  //
+  if(whichEff==4) {
+    for (int ii=0; ii<nEtaBins; ii++) {
+      for (int jj=0; jj<nPtBins; jj++) {
+	dataPassing[ii][jj]    = dataPassingBdtWrtAntiD0[ii][jj];
+	dataTotal[ii][jj]      = dataTotalBdtWrtAntiD0[ii][jj];
+	dataPassingErr[ii][jj] = dataPassingErrBdtWrtAntiD0[ii][jj];
+	dataTotalErr[ii][jj]   = dataTotalErrBdtWrtAntiD0[ii][jj];
+	mcPassing[ii][jj]      = mcPassingBdtWrtAntiD0[ii][jj];
+	mcTotal[ii][jj]        = mcTotalBdtWrtAntiD0[ii][jj];
+      }}
+  }
+  //
+  if(whichEff==5) {
+    for (int ii=0; ii<nEtaBins; ii++) {
+      for (int jj=0; jj<nPtBins; jj++) {
+	dataPassing[ii][jj]    = dataPassingAntiD0WrtBdt0[ii][jj];
+	dataTotal[ii][jj]      = dataTotalAntiD0WrtBdt0[ii][jj];
+	dataPassingErr[ii][jj] = dataPassingErrAntiD0WrtBdt0[ii][jj];
+	dataTotalErr[ii][jj]   = dataTotalErrAntiD0WrtBdt0[ii][jj];
+	mcPassing[ii][jj]      = mcPassingAntiD0WrtBdt0[ii][jj];
+	mcTotal[ii][jj]        = mcTotalAntiD0WrtBdt0[ii][jj];
+      }}
+  }
+
+
   // Now data efficiency with statistical errors
   double theDataEff[nEtaBins][nPtBins];
   double theDataEffErr[nEtaBins][nPtBins];
@@ -110,6 +220,8 @@ void drawResults(){
   }
 
   // -----------------------------------------
+  std::cout << "data: passing = " << dataPassing[0][0] << ", total =" << dataTotal[0][0] << std::endl;
+  std::cout << "mc: passing = "   << mcPassing[0][0]   << ", total =" << mcTotal[0][0]   << std::endl;
   std::cout << "dataEff = " << theDataEff[0][0] << " +-" << theDataEffErr[0][0] << std::endl;
   std::cout << "mcEff = " << theMcEff[0][0] << " +-" << theMcEffErr[0][0] << std::endl;
   std::cout << "SF = " << sf[0][0] << " +/- " << sfErrTot[0][0] << std::endl;
