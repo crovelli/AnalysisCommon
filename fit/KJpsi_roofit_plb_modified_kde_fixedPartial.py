@@ -53,10 +53,11 @@ def define_workspace_bmass_data_withweight(wspace_name,mB_branch,tree,Bmass_min=
    wspace = ROOT.RooWorkspace(wspace_name)
    fitvars = ROOT.RooArgSet()
    bMass = ROOT.RooRealVar(mB_branch, "m(K^{+}e^{+}e^{-})", Bmass_min, 5.7, "GeV")
-   weight = ROOT.RooRealVar("weight", "weight", -1, 100, "")  
+   weightElePt1 = ROOT.RooRealVar("weightElePt1", "weightElePt1", -1, 100, "")  
+   print(weightElePt1.getVal())
    fitvars.add(bMass)
-   fitvars.add(weight)
-   dataset = ROOT.RooDataSet('data','data',tree, ROOT.RooArgSet(fitvars), '', 'weight')
+   fitvars.add(weightElePt1)
+   dataset = ROOT.RooDataSet('data','data',tree, ROOT.RooArgSet(fitvars), '', 'weightElePt1')
    dataset.Print("V")
    print "is weighted = ", dataset.isWeighted()
    theBMassfunc = ROOT.RooFormulaVar("x", "x", "@0", ROOT.RooArgList(bMass) )
@@ -277,11 +278,18 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_pdf=No
      (wspace.var(par)).setVal(signal_parameters[par])
      if par not in ['mean', 'gauss_mean']:
        (wspace.var(par)).setConstant(True)
-   
+  
    for par in comb_parameters.keys():
      (wspace.var(par)).setVal(comb_parameters[par])
-     (wspace.var(par)).setConstant(True)
-     
+     (wspace.var(par)).setConstant(True)   
+   #
+   # chiara: solo per efficienza BDT on top of antiD0 cut   
+   #for par in comb_parameters.keys():
+   #  (wspace.var(par)).setVal(comb_parameters[par])
+   #notherB.setVal(750);
+   #notherB.setRange(500,1000);
+   # chiara: solo per efficienza BDT on top of antiD0 cut   
+       
    if partial_ratio is not None:
      wspace.var('frac_partial').setVal(partial_ratio)          
      # wspace.var('frac_partial').setConstant(True)                # chiara! in questo modo si fissa il rapporto relativo
@@ -357,7 +365,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_pdf=No
    legend.AddEntry(xframe.findObject("datas"),"Data","lpe");
    legend.Draw();
    pt=pt_create(mvacut,nsig_visible,nsig_visible_err,nbkg_visible)
-   pt.Draw()
+   ##########pt.Draw()
    CMS_lumi()
    c1.cd()
    c1.Update()
@@ -456,30 +464,22 @@ if __name__ == "__main__":
     else:
       cuts_samesign = branches[2]+"> 6.0 "+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" 
 
-
-    ## chiara: denominator  
+    ## chiara: denominator for combined efficiency BDT x antiD0
     #cuts = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && "+branches[2]+"> 0" 
     #cuts_otherb = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && "+branches[2]+"> 0" 
     #cuts_samesign = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && "+branches[2]+"> 0"
+
     
-    ## chiara: failing
-    #cuts = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && (" + branches[2]+"<"+str(args.mva) + " || " + branches[3] + "<2.0)"
-    #cuts_otherb = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && (" + branches[2]+"<"+str(args.mva) + " || " + branches[3] + "<2.0)" 
-    #if args.mva < 6.0:
-    #  cuts_samesign = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && " + branches[2]+"<"+str(args.mva) 
-    #else:
-    #  cuts_samesign = branches[2]+"< 6.0 "+" && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" 
+    ## chiara: denominator for efficiency of BDT cut only, on top of antiD0 applied at denominator
+    #cuts = branches[2]+">0 && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0"
+    #cuts_otherb = branches[2]+">0 && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0" 
+    #cuts_samesign = branches[2]+">0 && 2.9<"+branches[1]+" && "+branches[1]+"<3.2"
 
-    ## chiara: denominator BDT on top of antiDO
-    #cuts = "2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0"
-    #cuts_otherb = "2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0" 
-    #cuts_samesign = "2.9<"+branches[1]+" && "+branches[1]+"<3.2"
 
-    ## chiara: denominator antoDo on top of BDT 
+    ## chiara: denominator for efficiency of antoD0 cut only, on top of BDT applied at denominator
     #cuts = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && " + branches[2]+">"+str(args.mva)
     #cuts_otherb = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && " + branches[2]+">"+str(args.mva)
     #cuts_samesign = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && " + branches[2]+"> 6.0"
-
 
     print "cuts = ", cuts  
     print "cuts_otherb = ", cuts_otherb  

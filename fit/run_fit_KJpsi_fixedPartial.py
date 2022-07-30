@@ -43,9 +43,7 @@ if __name__ == "__main__":
   nparts = range(8)
 
   # PF-PF
-  #info['pf']['inputfile'] = '../splots/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_data_mvaCut0_withElesDrWeight.root'
-  #info['pf']['inputfile'] = '../splots/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_data_mvaCut0_withEle1PtWeight.root'
-  #info['pf']['inputfile'] = '../splots/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_data_mvaCut0_withEle2PtWeight.root'
+  #info['pf']['inputfile'] = '../splots/outputFiles_PFPF_forEffOfBDTonly/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_data_mvaCut0____withWeights.root'
   info['pf']['inputfile'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_data_mvaCut0.root'
   info['pf']['jpsi_mc'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_{}_MCres.root'.format('marker')
   info['pf']['partial_mc'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_{}_MC_kstarjpsi.root'.format('marker')
@@ -88,7 +86,7 @@ if __name__ == "__main__":
   selection['jpsi']  = '(Mll > 2.9) and (Mll < 3.2)'
   selection['psi2s'] = '(Mll > 3.55) and (Mll < 3.8)'
   selection['Dmass'] = '(KLmassD0 > 2.0)'                ## chiara
-  ####selection['Dmass'] = '(KLmassD0 > -10000000000)'     # per calcolo efficienze
+  ##selection['Dmass'] = '(KLmassD0 > -10000000000)'     # per calcolo efficienze
 
   mc_branches = ['Bmass', 'Mll', 'xgb', 'KLmassD0']
 
@@ -101,6 +99,7 @@ if __name__ == "__main__":
     #mvaCut = np.linspace(0., 0., 1)               # otto: 8.3
   else:
     mvaCut = np.linspace(8.6, 8.6, 1)               # otto: 8.6
+    #mvaCut = np.linspace(0., 0., 1)               # otto: 8.6
 
   for cut in mvaCut:
     eff_sig_bdt = np.mean([float(jpsi_mc_branches[i].query(' and '.join([selection['jpsi'], selection['Dmass'], '(xgb > @cut)'])).shape[0]) / info[eleType]['n_mc_jpsi'] for i in nparts])
