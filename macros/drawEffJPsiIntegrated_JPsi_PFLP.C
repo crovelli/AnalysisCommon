@@ -23,52 +23,125 @@ const double ptBinHalfWidth[nPtBins] = { 50. };
 
 // ----------------------------------------------------------
 // Signal yield in data and MC: hardcoded inputs
-double dataPassing[nEtaBins][nPtBins] = {
-  { 2.0326e+03 }
-  //{ 3.0027e+03 }   // dR(e1,e2)
-  //{ 1.9728e+03 }   // pt1
-  //{ 2.0929e+03 }   // pt2
+double dataPassingFull[nEtaBins][nPtBins] = {
+  { 2.0326e+03 }      
 };
 
-double dataPassingErr[nEtaBins][nPtBins] = {
+double dataPassingAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
+  { 2.0326e+03 }      
+};
+
+double dataPassingBdtWrtAntiD0[nEtaBins][nPtBins] = {
+  { 2.0326e+03 }      
+};
+
+double dataPassingErrFull[nEtaBins][nPtBins] = {
+  { 5.19e+01 }     
+};
+
+double dataPassingErrAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
   { 5.19e+01 }
-  //{ 6.47e+01 }
-  //{ 5.12e+01 }
-  //{ 5.29e+01 }
 };
 
-double dataTotal[nEtaBins][nPtBins] = {   
+double dataPassingErrBdtWrtAntiD0[nEtaBins][nPtBins] = {
+  { 5.19e+01 }
+};
+
+double dataTotalFull[nEtaBins][nPtBins] = {
   { 7.6065e+03 }
-  //{ 8.5085e+03 }
-  //{ 7.5820e+03 }
-  //{ 7.6723e+03 }
 };
 
-double dataTotalErr[nEtaBins][nPtBins] = {  
-  { 2.55e+02 }
-  //{ 2.39e+02 }
-  //{ 2.54e+02 }
-  //{ 2.57e+02 }
+double dataTotalAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
+  { 2.2401e+03 }
 };
 
-double mcPassing[nEtaBins][nPtBins] = {
+double dataTotalBdtWrtAntiD0[nEtaBins][nPtBins] = {
+  { 6.7205e+03 }
+};
+
+double dataTotalErrFull[nEtaBins][nPtBins] = {
+  { 255 }
+};
+
+double dataTotalErrAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
+  { 552 }
+};
+
+double dataTotalErrBdtWrtAntiD0[nEtaBins][nPtBins] = {
+  { 255 }
+};
+
+double mcPassingFull[nEtaBins][nPtBins] = {
   { 18390 }
-  //{ 25244.6 }
-  //{ 17860.5 }
-  //{ 18707.4 }
 };
 
-double mcTotal[nEtaBins][nPtBins] = {
+double mcPassingAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
+  { 18390 }
+};
+
+double mcPassingBdtWrtAntiD0[nEtaBins][nPtBins] = {
+  { 18390 }
+};
+
+double mcTotalFull[nEtaBins][nPtBins] = {
   { 65535 }
-  //{ 65840.4 }
-  //{ 65540.6 }
-  //{ 65510.9 }
+};
+
+double mcTotalAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
+  { 20244 }
+};
+
+double mcTotalBdtWrtAntiD0[nEtaBins][nPtBins] = {
+  { 57948 }
 };
 
 
 
-void drawResults(){
-  
+void drawResults( int whichEff){
+
+  double dataPassing[nEtaBins][nPtBins]; 
+  double dataTotal[nEtaBins][nPtBins]; 
+  double dataPassingErr[nEtaBins][nPtBins]; 
+  double dataTotalErr[nEtaBins][nPtBins]; 
+  double mcPassing[nEtaBins][nPtBins]; 
+  double mcTotal[nEtaBins][nPtBins]; 
+  //
+  if(whichEff==1) {
+    for (int ii=0; ii<nEtaBins; ii++) {
+      for (int jj=0; jj<nPtBins; jj++) {
+	dataPassing[ii][jj]    = dataPassingFull[ii][jj];
+	dataTotal[ii][jj]      = dataTotalFull[ii][jj];
+	dataPassingErr[ii][jj] = dataPassingErrFull[ii][jj];
+	dataTotalErr[ii][jj]   = dataTotalErrFull[ii][jj];
+	mcPassing[ii][jj]      = mcPassingFull[ii][jj];
+	mcTotal[ii][jj]        = mcTotalFull[ii][jj];
+      }}
+  }
+  //
+  if(whichEff==3) {
+    for (int ii=0; ii<nEtaBins; ii++) {
+      for (int jj=0; jj<nPtBins; jj++) {
+	dataPassing[ii][jj]    = dataPassingAntiD0WrtNominalBdt[ii][jj];
+	dataTotal[ii][jj]      = dataTotalAntiD0WrtNominalBdt[ii][jj];
+	dataPassingErr[ii][jj] = dataPassingErrAntiD0WrtNominalBdt[ii][jj];
+	dataTotalErr[ii][jj]   = dataTotalErrAntiD0WrtNominalBdt[ii][jj];
+	mcPassing[ii][jj]      = mcPassingAntiD0WrtNominalBdt[ii][jj];
+	mcTotal[ii][jj]        = mcTotalAntiD0WrtNominalBdt[ii][jj];
+      }}
+  }
+  //
+  if(whichEff==4) {
+    for (int ii=0; ii<nEtaBins; ii++) {
+      for (int jj=0; jj<nPtBins; jj++) {
+	dataPassing[ii][jj]    = dataPassingBdtWrtAntiD0[ii][jj];
+	dataTotal[ii][jj]      = dataTotalBdtWrtAntiD0[ii][jj];
+	dataPassingErr[ii][jj] = dataPassingErrBdtWrtAntiD0[ii][jj];
+	dataTotalErr[ii][jj]   = dataTotalErrBdtWrtAntiD0[ii][jj];
+	mcPassing[ii][jj]      = mcPassingBdtWrtAntiD0[ii][jj];
+	mcTotal[ii][jj]        = mcTotalBdtWrtAntiD0[ii][jj];
+      }}
+  }
+
   // Now data efficiency with statistical errors
   double theDataEff[nEtaBins][nPtBins];
   double theDataEffErr[nEtaBins][nPtBins];
@@ -110,6 +183,8 @@ void drawResults(){
   }
 
   // -----------------------------------------
+  std::cout << "data: passing = " << dataPassing[0][0] << ", total =" << dataTotal[0][0] << std::endl;
+  std::cout << "mc: passing = "   << mcPassing[0][0]   << ", total =" << mcTotal[0][0]   << std::endl;
   std::cout << "dataEff = " << theDataEff[0][0] << " +-" << theDataEffErr[0][0] << std::endl;
   std::cout << "mcEff = " << theMcEff[0][0] << " +-" << theMcEffErr[0][0] << std::endl;
   std::cout << "SF = " << sf[0][0] << " +/- " << sfErrTot[0][0] << std::endl;
