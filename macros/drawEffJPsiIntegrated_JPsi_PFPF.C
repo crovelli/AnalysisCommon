@@ -63,7 +63,8 @@ double dataTotalAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
 };
 
 double dataTotalBdtWrtAntiD0[nEtaBins][nPtBins] = {
-  { 9.1590e+03 }      
+  { 8.7805e+03 }      
+  //{ 9.156e+03 }      
 };
 
 double dataTotalAntiD0WrtBdt0[nEtaBins][nPtBins] = {
@@ -79,7 +80,8 @@ double dataTotalErrAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
 };
 
 double dataTotalErrBdtWrtAntiD0[nEtaBins][nPtBins] = {
-  { 351. }      
+  { 233. }      
+  //{ 457. }      
 };
 
 double dataTotalErrAntiD0WrtBdt0[nEtaBins][nPtBins] = {
