@@ -52,19 +52,6 @@ void drawTH1pair(TH1* h1, TH1* h2,
     h2->Scale(lumi/h2->Integral());
   }
 
-  // To deal with splots
-  for (int ii=0; ii<h1->GetNbinsX(); ii++){
-    int iip1 = ii+1;
-    if (h1->GetBinContent(iip1)<=0) { 
-      h1->SetBinContent(iip1,0);
-      h1->SetBinError(iip1,0);
-    } 
-    if (h2->GetBinContent(iip1)<=0) {
-      h2->SetBinContent(iip1,0);
-      h2->SetBinError(iip1,0);
-    } 
-  }
-
   h1->SetStats(0);
   h2->SetStats(0);
 
@@ -98,8 +85,6 @@ void drawTH1pair(TH1* h1, TH1* h2,
   h1->GetYaxis()->SetTitle(yAxisName.c_str());
   h1->GetYaxis()->SetTitleOffset(1.1);
   h1->GetYaxis()->SetTitleSize(0.05);
-  h1->GetYaxis()->SetRangeUser(0.0, max(h1->GetMaximum(),h2->GetMaximum()) * 1.2);
-  if (setXAxisRangeFromUser) h1->GetXaxis()->SetRangeUser(xmin,xmax);
   h1->Draw("EP");
 
   h2->SetTitle("");
@@ -108,7 +93,6 @@ void drawTH1pair(TH1* h1, TH1* h2,
   h2->Draw("hist E same");
 
   TLegend leg2 (0.65,0.65,0.95,0.85);
-  //TLegend leg2 (0.15,0.65,0.45,0.85);
   leg2.SetFillColor(0);
   leg2.SetFillStyle(0);
   leg2.SetBorderSize(0);
@@ -122,13 +106,12 @@ void drawTH1pair(TH1* h1, TH1* h2,
   pad2->cd();
 
   frame->Reset("ICES");
-  frame->GetYaxis()->SetRangeUser(0.,4.);
+  frame->GetYaxis()->SetRangeUser(-1.,4.);
   frame->GetYaxis()->SetNdivisions(5);
   frame->GetYaxis()->SetTitle(ratioPadYaxisName.c_str());
   frame->GetYaxis()->SetTitleOffset(1.2);
   frame->GetYaxis()->CenterTitle();
   frame->GetXaxis()->SetTitle(xAxisName.c_str());
-  if (setXAxisRangeFromUser) frame->GetXaxis()->SetRangeUser(xmin,xmax);
   frame->GetXaxis()->SetTitleSize(0.05);
   
   TH1D* ratio = (TH1D*) h1->Clone("ratio");
@@ -154,9 +137,6 @@ void drawTH1pair(TH1* h1, TH1* h2,
   canvas->SetLogy(logy);
   canvas->SaveAs((outputDIR + canvasName + ".png").c_str());
 
-  if (yAxisName == "a.u.") h1->GetYaxis()->SetRangeUser(max(0.0001,min(h1->GetMinimum(),h2->GetMinimum())*0.8),max(h1->GetMaximum(),h2->GetMaximum())*100);
-  else h1->GetYaxis()->SetRangeUser(max(0.001,min(h1->GetMinimum(),h2->GetMinimum())*0.8),max(h1->GetMaximum(),h2->GetMaximum())*100);
-
   delete canvas;
   frame->Reset("ICES");
 
@@ -171,8 +151,8 @@ void drawTH1pair(TH1* h1, TH1* h2,
 void mcVsSplots(int q2bin)
 {
   // Input files 
-  TFile *fileMC     = new TFile("files_nonRegr/mc_PFPF_JPsiBin__wp0.0.root");
-  TFile *fileSPlots = new TFile("files_nonRegr/splots_PFPF_JPsiBin___testA__wp0.0.root");
+  TFile *fileMC     = new TFile("./myFileMC.root");
+  TFile *fileSPlots = new TFile("./myFileSPlots.root");
   
   // MC histos 
   TH1F *h1mc_xgb   = (TH1F*)fileMC->Get("h1mc_xgb");
@@ -215,36 +195,43 @@ void mcVsSplots(int q2bin)
   TH1F *h1data_KLmassD0 = (TH1F*)fileSPlots->Get("h1_KLmassD0__KLmassD0");
 
   // Rebin
-  h1mc_L1pt->Rebin();
+
+  // all bins
+  h1mc_L1pt->Rebin(4);
+  h1mc_L1id->Rebin(2);
+  h1mc_L2id->Rebin(2);
   h1mc_L2pt->Rebin();
-  h1mc_Bpt->Rebin();
+  h1mc_LKdr->Rebin();
+  h1mc_Bpt->Rebin(4);
+  h1mc_Kpt->Rebin(4);
   h1mc_L1iso->Rebin();
   h1mc_Kiso->Rebin();
-  h1data_L1pt->Rebin();
+  h1data_L1pt->Rebin(4);
+  h1data_L1id->Rebin(2);
+  h1data_L2id->Rebin(2);
   h1data_L2pt->Rebin();
-  h1data_Bpt->Rebin();
+  h1data_LKdr->Rebin();
+  h1data_Bpt->Rebin(4);
+  h1data_Kpt->Rebin(4);
   h1data_L1iso->Rebin();
   h1data_Kiso->Rebin();
   h1mc_KLmassD0->Rebin();
   h1data_KLmassD0->Rebin();
 
   if (q2bin==2) {
-    h1mc_Kiso->Rebin();
-    h1data_Kiso->Rebin();
-    h1data_Kpt->Rebin();
-    h1mc_Kpt->Rebin();
-    h1data_L1pt->Rebin();
-    h1mc_L1pt->Rebin();
-    h1mc_L1id->Rebin();
-    h1data_L1id->Rebin();
-    h1data_L2pt->Rebin();
-    h1mc_L2pt->Rebin();
+    h1mc_L1L2dr->Rebin();
+    h1data_L1L2dr->Rebin();
     h1mc_L2id->Rebin();
     h1data_L2id->Rebin();
-    h1data_LKdr->Rebin();
+    h1mc_L2pt->Rebin();
+    h1data_L2pt->Rebin();
     h1mc_LKdr->Rebin();
+    h1data_LKdr->Rebin();
+    h1mc_xgb->Rebin();
+    h1data_xgb->Rebin();
   }
 
+  /*
   if (q2bin==0 || q2bin==2) {
     h1data_xgb->Rebin();
     h1mc_xgb->Rebin();
@@ -253,74 +240,16 @@ void mcVsSplots(int q2bin)
     h1data_LKdr->Rebin();
     h1mc_LKdr->Rebin();
   }
+  */
 
-  //
-  h1data_xgb->Rebin();
-  h1mc_xgb->Rebin();
-  //
-
-  // In sPlots, put bins with <0 weight to zero
-  int nBinsData_xgb   = h1data_xgb->GetNbinsX();
-  int nBinsData_L1id  = h1data_L1id->GetNbinsX();
-  int nBinsData_L2id  = h1data_L2id->GetNbinsX();
-  int nBinsData_Bprob = h1data_Bprob->GetNbinsX();
-  int nBinsData_BsLxy = h1data_BsLxy->GetNbinsX();
-  int nBinsData_Bcos  = h1data_Bcos->GetNbinsX();
-  int nBinsData_L1pt  = h1data_L1pt->GetNbinsX();
-  int nBinsData_L2pt  = h1data_L2pt->GetNbinsX();
-  int nBinsData_Bpt   = h1data_Bpt->GetNbinsX();
-  int nBinsData_Kpt   = h1data_Kpt->GetNbinsX();
-  int nBinsData_LKdz  = h1data_LKdz ->GetNbinsX();
-  int nBinsData_L1L2dr = h1data_L1L2dr->GetNbinsX();
-  int nBinsData_LKdr   = h1data_LKdr->GetNbinsX();
-  int nBinsData_L1iso  = h1data_L1iso->GetNbinsX();
-  int nBinsData_Kiso   = h1data_Kiso->GetNbinsX();
-  int nBinsData_Passymetry = h1data_Passymetry->GetNbinsX();
-  int nBinsData_Kip3d  = h1data_Kip3d->GetNbinsX();
-  int nBinsData_KLmassD0 = h1data_KLmassD0->GetNbinsX(); 
-
-  for (int ii=1; ii<=nBinsData_xgb; ii++)  { 
-    if (h1data_xgb->GetBinContent(ii)<0) h1data_xgb->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_L1id; ii++) { 
-    if (h1data_L1id->GetBinContent(ii)<0) h1data_L1id->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_L2id; ii++) { 
-    if (h1data_L2id->GetBinContent(ii)<0) h1data_L2id->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_Bprob; ii++) { 
-    if (h1data_Bprob->GetBinContent(ii)<0) h1data_Bprob->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_BsLxy; ii++) { 
-    if (h1data_BsLxy->GetBinContent(ii)<0) h1data_BsLxy->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_Bcos; ii++) { 
-    if (h1data_Bcos->GetBinContent(ii)<0) h1data_Bcos->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_L1pt; ii++) { 
-    if (h1data_L1pt->GetBinContent(ii)<0) h1data_L1pt->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_L2pt; ii++) { 
-    if (h1data_L2pt->GetBinContent(ii)<0) h1data_L2pt->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_Bpt; ii++) { 
-    if (h1data_Bpt->GetBinContent(ii)<0) h1data_Bpt->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_Kpt; ii++) { 
-    if (h1data_Kpt->GetBinContent(ii)<0) h1data_Kpt->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_LKdz; ii++) { 
-    if (h1data_LKdz->GetBinContent(ii)<0) h1data_LKdz->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_L1L2dr; ii++) { 
-    if (h1data_L1L2dr->GetBinContent(ii)<0) h1data_L1L2dr->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_LKdr; ii++) { 
-    if (h1data_LKdr->GetBinContent(ii)<0) h1data_LKdr->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_L1iso; ii++) { 
-    if (h1data_L1iso->GetBinContent(ii)<0) h1data_L1iso->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_Kiso; ii++) { 
-    if (h1data_Kiso->GetBinContent(ii)<0) h1data_Kiso->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_Passymetry; ii++) { 
-    if (h1data_Passymetry->GetBinContent(ii)<0) h1data_Passymetry->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_Kip3d; ii++) { 
-    if (h1data_Kip3d->GetBinContent(ii)<0) h1data_Kip3d->SetBinContent(ii,0); }
-  for (int ii=1; ii<=nBinsData_KLmassD0; ii++) { 
-    if (h1data_KLmassD0->GetBinContent(ii)<0) h1data_KLmassD0->SetBinContent(ii,0); }
 
   // Plots
   gROOT->SetStyle("Plain");
   gStyle->SetOptStat(0);
   // 
+  cout << h1data_xgb->GetMinimum() << " " << h1mc_xgb->GetMinimum() << endl;
   drawTH1pair(h1data_xgb,   h1mc_xgb,    "BDT",    "a.u.",1.,"bdt",  "./",2, 0, "Data","MC");
+  /*
   drawTH1pair(h1data_L1id,  h1mc_L1id,   "L1id",   "a.u.",1.,"L1id", "./",2, 0, "Data","MC");
   drawTH1pair(h1data_L2id,  h1mc_L2id,   "L2id",   "a.u.",1.,"L2id", "./",2, 0, "Data","MC");
   drawTH1pair(h1data_Bprob, h1mc_Bprob,  "Bprob",  "a.u.",1.,"Bprob","./",2, 0, "Data","MC");
@@ -337,5 +266,6 @@ void mcVsSplots(int q2bin)
   drawTH1pair(h1data_Kiso,  h1mc_Kiso,   "Kiso",   "a.u.",1.,"Kiso", "./",2, 0, "Data","MC");
   drawTH1pair(h1data_Passymetry, h1mc_Passymetry,  "Passymetry",  "a.u.",1.,"Passymetry","./",2, 0, "Data","MC");      
   drawTH1pair(h1data_Kip3d, h1mc_Kip3d,  "Kip3d",  "a.u.",1.,"Kip3d","./",2, 0, "Data","MC");        
+  */
   drawTH1pair(h1data_KLmassD0, h1mc_KLmassD0,  "KLmassD0",  "a.u.",1.,"KLmassD0","./",2, 0, "Data","MC");  
 }
