@@ -56,11 +56,13 @@ double dataTotalAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
 };
 
 double dataTotalBdtWrtAntiD0[nEtaBins][nPtBins] = {
-  { 6.7205e+03 }
+  //{ 6.7205e+03 }
+  { 6.7813e+03 }
 };
 
 double dataTotalErrFull[nEtaBins][nPtBins] = {
-  { 255 }
+  //{ 255 }
+  {394 }
 };
 
 double dataTotalErrAntiD0WrtNominalBdt[nEtaBins][nPtBins] = {
