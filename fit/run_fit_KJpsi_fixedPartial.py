@@ -43,8 +43,8 @@ if __name__ == "__main__":
   nparts = range(8)
 
   # PF-PF
-  #info['pf']['inputfile'] = '../splots/outputFiles_PFPF_forEffOfBDTonly/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_data_mvaCut0____withWeights.root'
-  info['pf']['inputfile'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_data_mvaCut0.root'
+  #info['pf']['inputfile'] = '../splots/outputFiles_PFPF_forEffOfBDTonly/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_data_mvaCut0____withWeights.root'       # chiara
+  info['pf']['inputfile'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_data_mvaCut0.root'                                            # chiara
   info['pf']['jpsi_mc'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_{}_MCres.root'.format('marker')
   info['pf']['partial_mc'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_{}_MC_kstarjpsi.root'.format('marker')
   info['pf']['kstarplus_mc'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_{}_MC_kstarplusjpsi.root'.format('marker')
@@ -64,11 +64,8 @@ if __name__ == "__main__":
   info['pf']['ibkg'] = 'otto_PFPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_samesign_mvaCut0.root'
 
   # PF-LP
-  info['mix']['inputfile'] = 'otto_LowPtPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0.root'
-  #info['mix']['inputfile'] = '../splots/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0_withEle1PtWeight.root'
-  #info['mix']['inputfile'] = '../splots/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0_withEle2PtWeight.root'
-  #info['mix']['inputfile'] = '../splots/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0_withElesDrWeight.root'
-
+  info['mix']['inputfile'] = 'otto_LowPtPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0.root'          # chiara
+  #info['mix']['inputfile'] = '../splots/outputFiles_PFLP_forEffOfBDTonly/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0____withWeights.root'           # chiara
   info['mix']['jpsi_mc'] = 'otto_LowPtPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_{}_MCres.root'.format('marker')
   info['mix']['partial_mc'] = 'otto_LowPtPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_{}_MC_kstarjpsi.root'.format('marker')
   info['mix']['kstarplus_mc'] = 'otto_LowPtPF_v7.3_nonreg/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_{}_MC_kstarplusjpsi.root'.format('marker')
@@ -85,8 +82,7 @@ if __name__ == "__main__":
 
   selection['jpsi']  = '(Mll > 2.9) and (Mll < 3.2)'
   selection['psi2s'] = '(Mll > 3.55) and (Mll < 3.8)'
-  selection['Dmass'] = '(KLmassD0 > 2.0)'                ## chiara
-  ##selection['Dmass'] = '(KLmassD0 > -10000000000)'     # per calcolo efficienze
+  selection['Dmass'] = '(KLmassD0 > 2.0)'                
 
   mc_branches = ['Bmass', 'Mll', 'xgb', 'KLmassD0']
 
