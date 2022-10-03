@@ -53,11 +53,15 @@ def define_workspace_bmass_data_withweight(wspace_name,mB_branch,tree,Bmass_min=
    wspace = ROOT.RooWorkspace(wspace_name)
    fitvars = ROOT.RooArgSet()
    bMass = ROOT.RooRealVar(mB_branch, "m(K^{+}e^{+}e^{-})", Bmass_min, 5.7, "GeV")
-   weightElePt1 = ROOT.RooRealVar("weightElePt1", "weightElePt1", -1, 100, "")  
-   print(weightElePt1.getVal())
+   weightElePt1 = ROOT.RooRealVar("weightElePt1", "weightElePt1", -1, 100, "")        # chiara: pt1 for PFPF, pt2 for lowPt-PF
+   #weightElePt2 = ROOT.RooRealVar("weightElePt2", "weightElePt2", -1, 100, "")       # chiara: pt1 for PFPF, pt2 for lowPt-PF  
+   print(weightElePt1.getVal())                                                       # chiara  
+   #print(weightElePt2.getVal())                                                      # chiara 
    fitvars.add(bMass)
-   fitvars.add(weightElePt1)
-   dataset = ROOT.RooDataSet('data','data',tree, ROOT.RooArgSet(fitvars), '', 'weightElePt1')
+   fitvars.add(weightElePt1)                   # chiara
+   #fitvars.add(weightElePt2)                  # chiara 
+   dataset = ROOT.RooDataSet('data','data',tree, ROOT.RooArgSet(fitvars), '', 'weightElePt1')        # chiara
+   #dataset = ROOT.RooDataSet('data','data',tree, ROOT.RooArgSet(fitvars), '', 'weightElePt2')       # chiara
    dataset.Print("V")
    print "is weighted = ", dataset.isWeighted()
    theBMassfunc = ROOT.RooFormulaVar("x", "x", "@0", ROOT.RooArgList(bMass) )
@@ -220,8 +224,8 @@ def bkg_fit(tree, outputfile, branches, SavePlot=True):
 ############################# total fit ##############################
 def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_pdf=None, KstarJpsi_pdf=None, KstarPlusJpsi_pdf=None, comb_parameters=None,Significance_range=None, partial_ratio=None, partial_ratio_kstarplus=None, mvacut="",log='log.csv'):
 
-   wspace,dataset,bMass,theBMass = define_workspace_bmass_data("wspace_total",branches[0],tree)
-   #wspace,dataset,bMass,theBMass = define_workspace_bmass_data_withweight("wspace_total",branches[0],tree)
+   wspace,dataset,bMass,theBMass = define_workspace_bmass_data("wspace_total",branches[0],tree)                # chiara: choose which has to be used.
+   #wspace,dataset,bMass,theBMass = define_workspace_bmass_data_withweight("wspace_total",branches[0],tree)    # chiara: choose which has to be used.
    print "Total"
    #amplitudes
    wspace.factory('nsignal[10000.0, 0.0, 1000000.0]' )
@@ -279,11 +283,12 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_pdf=No
      if par not in ['mean', 'gauss_mean']:
        (wspace.var(par)).setConstant(True)
   
+   # chiara: this is the nominal
    for par in comb_parameters.keys():
      (wspace.var(par)).setVal(comb_parameters[par])
      (wspace.var(par)).setConstant(True)   
-   #
-   # chiara: solo per efficienza BDT on top of antiD0 cut   
+   
+   # chiara: solo per denominatore efficienza BDT on top of antiD0 cut   
    #for par in comb_parameters.keys():
    #  (wspace.var(par)).setVal(comb_parameters[par])
    #notherB.setVal(750);
@@ -365,7 +370,9 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_pdf=No
    legend.AddEntry(xframe.findObject("datas"),"Data","lpe");
    legend.Draw();
    pt=pt_create(mvacut,nsig_visible,nsig_visible_err,nbkg_visible)
+   ch2=chi2_create(mvacut,xframe.chiSquare(n_param),n_param)
    ##########pt.Draw()
+   ch2.Draw()
    CMS_lumi()
    c1.cd()
    c1.Update()
@@ -474,7 +481,6 @@ if __name__ == "__main__":
     #cuts = branches[2]+">0 && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0"
     #cuts_otherb = branches[2]+">0 && 2.9<"+branches[1]+" && "+branches[1]+"<3.2" + " && " + branches[3] + ">2.0" 
     #cuts_samesign = branches[2]+">0 && 2.9<"+branches[1]+" && "+branches[1]+"<3.2"
-
 
     ## chiara: denominator for efficiency of antoD0 cut only, on top of BDT applied at denominator
     #cuts = "2.9<"+branches[1]+" && "+branches[1]+"<3.2 && " + branches[2]+">"+str(args.mva)
