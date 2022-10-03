@@ -59,3 +59,16 @@ def pt_create(mva,nsig,nsigError,nbkg):
   pt.AddText("B: {0:.1f}".format(nbkg))
   pt.AddText("S/#sqrt{{S+B}}: {0:.2f}".format(nsig/sqrt(nsig + nbkg)))
   return pt
+
+def chi2_create(mva,chi2,ndf):
+  #ptch2 = rt.TPaveText(0.15,0.70,0.35,0.85,"brNDC")
+  ptch2 = rt.TPaveText(0.15,0.45,0.35,0.60,"brNDC")
+  ptch2.SetFillColor(0)
+  ptch2.SetBorderSize(1)
+  ptch2.SetTextFont(42);
+  ptch2.SetTextSize(0.03);
+  ptch2.SetTextAlign(12)
+  ptch2.AddText("MVA cut: {0}".format(mva))
+  ptch2.AddText("chi2: {0:.2f}".format(chi2))
+  ptch2.AddText("ndf: {0:.2f}".format(ndf))
+  return ptch2
