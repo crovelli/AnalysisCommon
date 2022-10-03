@@ -414,11 +414,13 @@ void SPlotJPsi::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
       // !!!  ===> chiara: for K=4 (i.e. K*+JPsi bkg) set also nKstarJpsi=1 <=== !!!    
       yieldvars[k]->setVal( 1 ) ;         
       if (k==3) yieldvars[0]->setVal( 1 ) ;        
+      /*
       else if (k==4) {
 	yieldvars[0]->setVal( 1 ) ;        
 	yieldvars[3]->setVal( 1 ) ;        
       }
-      
+      */
+
       // evaluate the pdf
 
       //**************
