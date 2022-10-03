@@ -31,17 +31,15 @@ def residuals(xframe, var,name):
    c3=canvas_create(xframe3,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]',False)
    c3.SaveAs(name+'_pull.png')
 
-
-
-def define_workspace_bmass_data(wspace_name,mB_branch,tree):
+def define_workspace_bmass_data(wspace_name,mB_branch,tree,Bmass_min=4.7):
    wspace = ROOT.RooWorkspace(wspace_name)
    fitvars = ROOT.RooArgSet()
-   bMass = ROOT.RooRealVar(mB_branch, "m(K^{+}e^{+}e^{-})", 4.7, 5.7, "GeV")
+   bMass = ROOT.RooRealVar(mB_branch, "m(K^{+}e^{+}e^{-})", Bmass_min, 5.7, "GeV")
    fitvars.add(bMass)
    dataset = ROOT.RooDataSet('data','data',tree, ROOT.RooArgSet(fitvars))
    theBMassfunc = ROOT.RooFormulaVar("x", "x", "@0", ROOT.RooArgList(bMass) )
    theBMass     = dataset.addColumn(theBMassfunc) ;
-   theBMass.setRange(4.7,5.7);
+   theBMass.setRange(Bmass_min,5.7);
    fitvars.add(theBMass)
    getattr(wspace, "import")(dataset, RooFit.Rename('data'))
    # When a RooWorkspace is set as an attribute of a class, it can trigger a memory error
@@ -58,7 +56,7 @@ def get_visible_yield_error(obs, results, pdf, amplitude):
    intgral_pdf = pdf.createIntegral(obs,obs,"window")
    intgral_pdf_err = intgral_pdf.getPropagatedError(results, obs)  
    visible = amplitude.getVal() * intgral_pdf.getVal()
-   visible_err = visible * math.sqrt(pow(amplitude.getError()/amplitude.getVal(), 2) + pow(intgral_pdf_err/intgral_pdf.getVal(), 2)) if amplitude.getVal() != 0.0 else 0.0
+   visible_err = visible * math.sqrt(pow(amplitude.getError()/amplitude.getVal(), 2) + pow(intgral_pdf_err/intgral_pdf.getVal(), 2)) if (amplitude.getVal() != 0.0 and intgral_pdf.getVal() != 0) else 0.0
    return visible, visible_err
 
 
@@ -95,12 +93,12 @@ def signal_fit(tree, outputfile, branches, SavePlot=True):
    print "edm",results.edm(),"log",results.minNll()
   
    c1=canvas_create(sgnframe,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
+
    CMS_lumi()
    if SavePlot:
      c1.SaveAs('sgn_eek_'+outputfile+'.png')
      residuals(sgnframe,theBMass,'sgn_eek_'+outputfile)
    params=esig.getParameters(ROOT.RooArgSet(bMass))
-   #return {"mean":1}
    return {"mean":params.getRealValue('mean'),"width": params.getRealValue('width'),"alpha1":params.getRealValue('alpha1'),"n1":params.getRealValue('n1'),"frac":params.getRealValue('frac'),"gauss_mean":params.getRealValue('mean2'),"gauss_width":params.getRealValue('width2')}
 
 ############################ BKG fit #################################
@@ -112,7 +110,7 @@ def otherB_fit(tree, outputfile, branches, SavePlot=True):
    wspace.factory('exp_alpha_otherb[-15.7, -100.0, -5.0]')
    exp_alpha_otherb = wspace.var('exp_alpha_otherb')
    wspace.factory('Exponential::exp_otherb(x,exp_alpha_otherb)')
-   wspace.factory('notherB[1000,0,10e+6]')
+   wspace.factory('notherB[1000,0,10e+7]')
    wspace.factory('RooExtendPdf::eexp_otherb(exp_otherb,notherB)')
    notherB=wspace.var('notherB')
    eexp_otherb=wspace.pdf('eexp_otherb')
@@ -122,6 +120,7 @@ def otherB_fit(tree, outputfile, branches, SavePlot=True):
    dataset.plotOn(otherb_frame,RooFit.Binning(nbin_data), RooFit.Name("datas"))
    eexp_otherb.plotOn(otherb_frame,RooFit.Name("eexpOB"),RooFit.LineColor(30),RooFit.Normalization(1.0, ROOT.RooAbsReal.RelativeExpected),RooFit.LineWidth(3))
    c1=canvas_create(otherb_frame,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
+
    CMS_lumi()
    if SavePlot:
      c1.SaveAs('bkg_otherB_'+outputfile+'.png')
@@ -135,26 +134,24 @@ def otherB_fit(tree, outputfile, branches, SavePlot=True):
 
 
 ############################ KDE fit #######################
-def kde_fit(tree, outputfile, branches, pdfname, SavePlot=True):
+def kde_fit(tree, outputfile, branches, pdfname, SavePlot=True, par=1.5, Bmass_min=4.7):
    print "KDE - {}".format(pdfname)
-   wspace,dataset,bMass,theBMass = define_workspace_bmass_data("wspace_kde",branches[0],tree)
+   wspace,dataset,bMass,theBMass = define_workspace_bmass_data("wspace_kde",branches[0],tree, Bmass_min=Bmass_min)
    kde_frame=theBMass.frame()
-   wspace.factory('KeysPdf::{0}(x,data,MirrorBoth,2.0)'.format(pdfname))
+   wspace.factory('KeysPdf::{0}(x,data,MirrorLeft,{1})'.format(pdfname, par))
    kde = wspace.pdf(pdfname)
 
    dataset.plotOn(kde_frame,RooFit.Binning(nbin_data), RooFit.Name("datas"))
    kde.plotOn(kde_frame, RooFit.LineColor(ROOT.kBlue), RooFit.LineWidth(2) )
 
-   #wf = ROOT.TFile('ws_bkg_kde_'+outputfile+'_{}.root'.format(pdfname), "RECREATE")
-   #wspace.Write()
-   #wf.Close()
-
    c1=canvas_create(kde_frame,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV] ')
+
    CMS_lumi()
    if SavePlot:
      c1.SaveAs('bkg_kde_'+outputfile+'_{}.png'.format(pdfname))
      residuals(kde_frame,theBMass,'bkg_kde_'+outputfile+'_'+pdfname)
    return kde
+
 
 ############################ Combinatorial fit =Expo ###########################
 def bkg_fit(tree, outputfile, branches, SavePlot=True):
@@ -174,6 +171,7 @@ def bkg_fit(tree, outputfile, branches, SavePlot=True):
    eexp_comb.plotOn(combframe,RooFit.Name("eexp_comb"), RooFit.LineColor(49),RooFit.Normalization(1.0, ROOT.RooAbsReal.RelativeExpected),RooFit.LineWidth(3))
    params=eexp_comb.getParameters(ROOT.RooArgSet(bMass))
    c1=canvas_create(combframe,4.7,5.7,nbin_data,'m (e^{+}e^{-}K) [GeV]')
+
    CMS_lumi()
    if SavePlot: 
      c1.SaveAs('bkg_comb_'+outputfile+'.png')
@@ -188,19 +186,17 @@ def bkg_fit(tree, outputfile, branches, SavePlot=True):
 
 
 ############################# total fit ##############################
-def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parameters=None, KstarPsi2S_pdf=None , KstarJpsi_pdf=None , KJpsi_pdf=None, comb_parameters=None,Significance_range=None, partial_ratio=None, mvacut="",log='log.csv'):
+def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_pdf=None, KstarPsi2S_pdf=None , KstarJpsi_pdf=None , KJpsi_pdf=None, comb_parameters=None,Significance_range=None, partial_ratio=None, mvacut="",log='log.csv'):
    wspace,dataset,bMass,theBMass = define_workspace_bmass_data("wspace_total",branches[0],tree)
    print "Total"
    #amplitudes
    wspace.factory('nsignal[600.0, 0.0, 1000000.0]' )
    wspace.factory('ncomb[1000.0, 0.0, 1000000.0]')
-   wspace.factory('notherB[500.0, 0.0, 1000000.0]')
+   wspace.factory('notherB[100.0, 0.0, 10000000.0]')
    wspace.factory('nKstarJpsi[100.0, 0.0, 1000000.0]')
    wspace.factory('nkjpsi[100.0, 0.0, 1000000.0]')
-
    wspace.factory('frac_partial[1.0, 0.0, 10.0]')
    wspace.factory('prod::nKstarPsi2S(frac_partial,nsignal)')
-
 
    # signal
    wspace.factory('mean[5.278e+00, 5.22e+00, 5.5e+00]')
@@ -215,8 +211,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    wspace.factory('SUM::signal(cb_signal,frac*g_signal)')
 
    # other B - bkg
-   wspace.factory('exp_alpha_otherb[-15.0, -100.0, -5.0]') # chiara
-   wspace.factory('Exponential::exp_otherb(x,exp_alpha_otherb)')
+   getattr(wspace, "import")(otherB_pdf, RooFit.Rename('otherb'))
 
    # K*Psi2S - bkg 
    getattr(wspace, "import")(KstarPsi2S_pdf, RooFit.Rename('kstarpsi2s'))
@@ -232,11 +227,11 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    wspace.factory('Exponential::exp_comb(x,exp_alpha_comb)')
 
    #sum
-   wspace.factory('SUM::model(nsignal*signal,ncomb*exp_comb,nKstarPsi2S*kstarpsi2s,notherB*exp_otherb)')
+   wspace.factory('SUM::model(nsignal*signal,ncomb*exp_comb,nKstarPsi2S*kstarpsi2s,notherB*otherb)')
 
    model = wspace.pdf('model');   
    signal = wspace.pdf('signal');        exp_comb = wspace.pdf('exp_comb')
-   exp_otherb = wspace.pdf('exp_otherb')
+   otherb = wspace.pdf('otherb')
    kjpsi = wspace.pdf('kjpsi')
    kstarpsi2s = wspace.pdf('kstarpsi2s'); kstarjpsi = wspace.pdf('kstarjpsi')
    nsignal = wspace.var('nsignal');      ncomb = wspace.var('ncomb')
@@ -245,29 +240,20 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    notherB = wspace.var('notherB')
    frac_partial = wspace.var('frac_partial')
 
-   for par in signal_parameters.keys():
+   for par in signal_parameters.keys():                      ## chiara: era cosi' nel codice di otto. Lo modifico come sotto per fittare meglio i casi: PF-LP e WP>=3, PF-PF e WP<=6
      (wspace.var(par)).setVal(signal_parameters[par])
-     #(wspace.var(par)).setConstant(True)         # chiara, before everything constant
-   wspace.var('width').setConstant(True)          # chiara
-   wspace.var('alpha1').setConstant(True)         # chiara
-   wspace.var('n1').setConstant(True)             # chiara
-   wspace.var('frac').setConstant(True)           # chiara
-   wspace.var('gauss_width').setConstant(True)    # chiara
-
-   for par in otherB_parameters.keys():
-     (wspace.var(par)).setVal(otherB_parameters[par])
-     #(wspace.var(par)).setConstant(True)
-
+     (wspace.var(par)).setConstant(True)
+   #for par in signal_parameters.keys():
+   #  (wspace.var(par)).setVal(signal_parameters[par])
+   #  if par not in ['width', 'gauss_width']:
+   #     (wspace.var(par)).setConstant(True)
+         
    for par in comb_parameters.keys():
      (wspace.var(par)).setVal(comb_parameters[par])
-     (wspace.var(par)).setConstant(True)           # chiara: was not constant 
+     (wspace.var(par)).setConstant(True)
 
    if partial_ratio is not None:
      wspace.var('frac_partial').setVal(partial_ratio)
-     #wspace.var('frac_partial').setConstant(True)
-
-   #wspace.var('nKstarJpsi').setVal(267)
-   #wspace.var('nKstarJpsi').setConstant(True)
 
    results = model.fitTo(dataset, RooFit.Extended(True), RooFit.Save(), RooFit.Range(4.7,5.7), RooFit.PrintLevel(-1))
    print results.Print()
@@ -277,14 +263,10 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    dataset.plotOn(xframe,RooFit.Binning(nbin_data), RooFit.Name("datas")) 
 
    model.plotOn(xframe,RooFit.Name("exp_comb"),RooFit.Components("exp_comb"),RooFit.Range("Full"),RooFit.DrawOption("L"),RooFit.VLines(),RooFit.FillColor(49),RooFit.LineColor(49),RooFit.LineStyle(2),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineWidth(3))
-   model.plotOn(xframe,RooFit.Name("exp_otherb"),RooFit.Components("exp_otherb"),RooFit.Range("Full"),RooFit.FillColor(30),RooFit.LineColor(30),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
-   #model.plotOn(xframe,RooFit.Name("kjpsi"),RooFit.Components("kjpsi"),RooFit.Range("Full"),RooFit.FillColor(43),RooFit.LineColor(43),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
+   model.plotOn(xframe,RooFit.Name("otherb"),RooFit.Components("otherb"),RooFit.Range("Full"),RooFit.FillColor(30),RooFit.LineColor(30),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
    model.plotOn(xframe,RooFit.Name("kstarpsi2s"),RooFit.Components("kstarpsi2s"),RooFit.Range("Full"),RooFit.FillColor(30),RooFit.LineColor(12),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
-   #model.plotOn(xframe,RooFit.Name("kstarjpsi"),RooFit.Components("kstarjpsi"),RooFit.Range("Full"),RooFit.FillColor(30),RooFit.LineColor(15),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineStyle(2), RooFit.LineWidth(3),RooFit.DrawOption("L"),RooFit.MoveToBack())
    model.plotOn(xframe,RooFit.Name("signal"),RooFit.Components("signal"),RooFit.Range("Full"),RooFit.DrawOption("L"),RooFit.LineStyle(2),RooFit.LineColor(ROOT.kBlue),RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected), RooFit.LineWidth(3))
    model.plotOn(xframe, RooFit.Normalization(norm, ROOT.RooAbsReal.RelativeExpected),RooFit.LineColor(ROOT.kRed) )
-   #  c1=canvas_create(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]')  
-   #  c1.SaveAs('total_fit_'+outputfile+'.png')
    wspace.defineSet('obs', 'x')
    obs  = wspace.set('obs') 
 
@@ -293,7 +275,6 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
      Significance_range={"min":params["mean"]-2*params["width"],"max":params["mean"]+2*params["width"]}
    theBMass.setRange("window",Significance_range["min"],Significance_range["max"])
 
-   #theBMass.setRange("window",5.0,5.4)
    obs2= ROOT.RooRealVar("obs2","obs2",Significance_range["min"],Significance_range["max"])
    nset = ROOT.RooArgSet(obs2)
    print nsignal.getVal(), nsignal.getVal(nset)
@@ -302,47 +283,42 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    nsig_visible, nsig_visible_err = get_visible_yield_error(obs, results, signal, nsignal)
    nKstarPsi2S_visible = get_visible_yield(obs, results, kstarpsi2s , nKstarPsi2S)
    nKstarPsi2S_visible_err = 0.0
-   ##nKstarJpsi_visible, nKstarJpsi_visible_err = get_visible_yield_error(obs, results, kstarjpsi , nKstarJpsi)
-   ##nKJpsi_visible, nKJpsi_visible_err = get_visible_yield_error(obs, results,kjpsi , nKJpsi)
-   notherB_visible, notherB_visible_err = get_visible_yield_error(obs, results,exp_otherb , notherB)
-   #nbkg_visible = ncomb_visible+nKstarPsi2S_visible+nKstarJpsi_visible+nKJpsi_visible+notherB_visible
-   #nbkg_visible = ncomb_visible+nKstarPsi2S_visible+nKJpsi_visible+notherB_visible
-   nbkg_visible = ncomb_visible+nKstarPsi2S_visible+notherB_visible
-   #nbkg_visible = ncomb_visible+nKstarPsi2S_visible+nKstarJpsi_visible+notherB_visible
+   nKstarJpsi_visible, nKstarJpsi_visible_err = get_visible_yield_error(obs, results, kstarjpsi , nKstarJpsi)
+   nKJpsi_visible, nKJpsi_visible_err = get_visible_yield_error(obs, results,kjpsi , nKJpsi)
+   notherB_visible = get_visible_yield(obs, results, otherb , notherB)
+   notherB_visible_err = 0.0
+   nbkg_visible = ncomb_visible+nKstarPsi2S_visible
 
-#   c1=canvas_create(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]')
    n_param = results.floatParsFinal().getSize()
    print "chi2",xframe.chiSquare(n_param),"ndof",n_param
    print "edm",results.edm(),"log",results.minNll()
    c1=canvas_create(xframe,4.7,5.7,nbin_data,'m(e^{+}e^{-}K) [GeV]')
 
+
    legend = ROOT.TLegend(0.65,0.65,0.92,0.85)
    legend.AddEntry(xframe.findObject("exp_comb"),"Combinatorial","l");
    legend.AddEntry(xframe.findObject("kstarpsi2s"),"B -> #psi(2S)K*","l");
-   #legend.AddEntry(xframe.findObject("kstarjpsi"),"B -> J/#psiK*","l");
-   #legend.AddEntry(xframe.findObject("kjpsi"),"B -> J/#psiK","l");
-   legend.AddEntry(xframe.findObject("exp_otherb"),"Other B","l");
+   legend.AddEntry(xframe.findObject("otherb"),"Other B","l");
    legend.AddEntry(xframe.findObject("signal"),"B -> #psi(2S)K","l");
    legend.SetLineColor(ROOT.kWhite)
    legend.SetTextFont(42);
    legend.SetTextSize(0.04);
    legend.AddEntry(xframe.findObject("datas"),"Data","lpe");
    legend.Draw();
-   #pt=pt_create(mvacut,nsig_visible,nsig_visible_err,nKstarPsi2S_visible+nKstarJpsi_visible+ncomb_visible+nKJpsi_visible+notherB_visible)
    pt=pt_create(mvacut,nsig_visible,nsig_visible_err,nbkg_visible)
    pt.Draw()
    CMS_lumi()
    c1.cd()
    c1.Update()
    c1.SaveAs('total_fit_'+outputfile+'.png')
-   print "signal",nsig_visible,"+/-", nsig_visible_err,"comb",ncomb_visible,"+/-", ncomb_visible_err,"K* Psi2S", nKstarPsi2S_visible, "+/-",nKstarPsi2S_visible_err, "otherB", notherB_visible, "+/-",notherB_visible_err
-   #print "signal",nsig_visible,"+/-", nsig_visible_err,"comb",ncomb_visible,"+/-", ncomb_visible_err,"K* Psi2S", nKstarPsi2S_visible, "+/-",nKstarPsi2S_visible_err,"K* J/psi", nKstarJpsi_visible, "+/-",nKstarJpsi_visible_err, "K J/psi", nKJpsi_visible, "+/-", nKJpsi_visible_err, "otherB", notherB_visible, "+/-",notherB_visible_err
-   residuals(xframe,theBMass,"poutana")
+   c1.SaveAs('total_fit_'+outputfile+'.root')
+   print "signal",nsig_visible,"+/-", nsig_visible_err," comb",ncomb_visible,"+/-", ncomb_visible_err," K* Psi2S", nKstarPsi2S_visible, "+/-",nKstarPsi2S_visible_err," K* J/psi", nKstarJpsi_visible, "+/-",nKstarJpsi_visible_err, " K J/psi", nKJpsi_visible, "+/-", nKJpsi_visible_err, " otherB", notherB_visible, "+/-",notherB_visible_err
+   residuals(xframe,theBMass,outputfile+"_poutana")
 
    saveWS = True
    if saveWS:
      # get likelihood
-      
+     '''
      nll = model.createNLL(dataset)
      ROOT.RooMinuit(nll).migrad()
      nll_frame = nsignal.frame(RooFit.Bins(30),RooFit.Range(500,1000),RooFit.Title("LL and profileLL in nsignal")) ;
@@ -356,6 +332,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
      c2.cd()
      c2.Update()
      c2.SaveAs('nll_'+outputfile+'.png')
+     '''
 
      wspace_output = ROOT.RooWorkspace('wspace')
      getattr(wspace_output, "import")(model)
@@ -371,13 +348,13 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
    df['nsig_total'] = nsignal.getVal()
    df['nsig_total_unc'] = nsignal.getError()
    df['nKstarPsi2S_total'] = nKstarPsi2S.getVal()
-   df['nKstarPsi2S_total_unc'] = 0.0
+   df['nKstarPsi2S_total_unc'] = nKstarPsi2S.getPropagatedError(results)
    df['nsig'] = nsig_visible
    df['nbkg'] = nbkg_visible
    df['ncomb'] = ncomb_visible
    df['nKstarPsi2S'] = nKstarPsi2S_visible
-   #df['nKstarJpsi'] = nKstarJpsi_visible
-   #df['nKJpsi'] = nKJpsi_visible
+   df['nKstarJpsi'] = nKstarJpsi_visible
+   df['nKJpsi'] = nKJpsi_visible
    df['notherB'] = notherB_visible
    df['snr'] = nsig_visible / np.sqrt(nsig_visible + nbkg_visible)
    df['chi2'] = xframe.chiSquare(n_param)
@@ -389,8 +366,7 @@ def total_fit(tree, outputfile, branches, signal_parameters=None,  otherB_parame
        writer.writeheader()
      writer.writerow(df) 
 
-     #return (nsig_visible, ncomb_visible, nKstarPsi2S_visible, nKstarJpsi_visible, nKJpsi_visible, notherB_visible, nsignal.getVal() )
-   return (nsig_visible, ncomb_visible, nKstarPsi2S_visible, notherB_visible, nsignal.getVal() )
+   return (nsig_visible, ncomb_visible, nKstarPsi2S_visible, nKstarJpsi_visible, nKJpsi_visible, notherB_visible, nsignal.getVal() )
 
 
 
@@ -416,11 +392,19 @@ if __name__ == "__main__":
     parser.add_argument("--log", dest="log", default="log.csv", help="log of the fitting results")
     args = parser.parse_args()
 
-    branches=["Bmass","Mll","xgb","KLmassD0"]
-    cuts = branches[2]+">"+str(args.mva)+" && 3.55<"+branches[1]+" && "+branches[1]+"<3.8" + " && " + branches[3] + ">2.0"
-    cuts_samesign = branches[2]+">"+str(args.mva)+" && 3.55<"+branches[1]+" && "+branches[1]+"<3.8"
-    #cuts = branches[2]+">"+str(args.mva)+" && 3.55<"+branches[1]+" && "+branches[1]+"<3.8" 
-    #cuts = branches[2]+">"+str(args.mva)+" && 3.55<"+branches[1]+" && "+branches[1]+"<3.8" + " && " + branches[3] + ">2.0"
+
+    # chiara
+    branches=["Bmass","Mll","xgb","KLmassD0","Mu9_IP6"]
+    cuts = branches[2]+">"+str(args.mva)+" && 3.55<"+branches[1]+" && "+branches[1]+"<3.8" + " && " + branches[3] + ">2.0" #+ " && " + branches[4]
+    cuts_otherb = branches[2]+">"+str(min(args.mva, 4.0))+" && 3.55<"+branches[1]+" && "+branches[1]+"<3.8" + " && " + branches[3] + ">2.0" #+ " && " + branches[4]
+
+    if args.mva < 6.0:
+      cuts_samesign = branches[2]+">"+str(args.mva)+" && 3.55<"+branches[1]+" && "+branches[1]+"<3.8"
+    else:
+      cuts_samesign = branches[2]+"> 6.0 "+" && 3.55<"+branches[1]+" && "+branches[1]+"<3.8"
+
+
+
     args.outputfile+="_wp"+str(args.mva)
 
     otherB_parameters={'exp_alpha_otherb':-5.099}
@@ -444,10 +428,10 @@ if __name__ == "__main__":
       if "bkg_otherb" in args.sel_primtv:
         tree_otherB = ROOT.TChain('mytreefit')
         tree_otherB.Add(args.iotherB_BKG)
-        tree_otherB_cut=tree_otherB.CopyTree(cuts)
-        otherB_parameters = otherB_fit(tree_otherB_cut, args.outputfile+"_otherBMC", branches)
-        print "parameters otherB BKG",  otherB_parameters['exp_alpha_otherb']
-    
+        tree_otherB_cut=tree_otherB.CopyTree(cuts_otherb)
+        otherB_pdf = kde_fit(tree_otherB_cut, args.outputfile+"_otherBMC", branches, 'otherb', Bmass_min=4.5)
+        print "finished kde fit for other B"
+   
       if "bkg_comb" in args.sel_primtv:
         tree_bkg = ROOT.TChain('mytreefit')
         tree_bkg.Add(args.ibkg)
@@ -486,12 +470,8 @@ if __name__ == "__main__":
       if args.minx==-1: args.minx=signal_parameters["mean"]-2*signal_parameters["width"]
       if args.maxx==-1: args.maxx=signal_parameters["mean"]+2*signal_parameters["width"]
 
-      nsig, nbkg, nKstarPsi2S, notherB, nsig_total =total_fit(tree_cut, args.outputfile, branches, signal_parameters,  otherB_parameters, KstarPsi2S_pdf, KstarJpsi_pdf ,KJpsiee_pdf, comb_parameters, {"min":args.minx,"max":args.maxx},args.partial_ratio, str(args.mva), args.log)
-      #nsig, nbkg, nKstarPsi2S, nKstarJpsi, nKJpsi, notherB, nsig_total =total_fit(tree_cut, args.outputfile, branches, signal_parameters,  otherB_parameters, KstarPsi2S_pdf, KstarJpsi_pdf ,KJpsiee_pdf, comb_parameters, {"min":args.minx,"max":args.maxx},args.partial_ratio, str(args.mva), args.log)
-      #print "sig",nsig,"comb", nbkg,"K* Psi2S",  nKstarPsi2S,"K* J/psi", nKstarJpsi,"K J/psi", nKJpsi, "otherB", notherB,"all sig", nsig_total
-      print "sig",nsig,"comb", nbkg,"K* Psi2S",  nKstarPsi2S, "otherB", notherB,"all sig", nsig_total
-      # combinatorial BKG parameters set but not fixed.
-#      print "sigma",float(nsig)/math.sqrt(nsig+nkjpsi+nbkg),"nsig",float(nsig),"nbkg",float(nbkg),"Kjpsi leak",float(nkjpsi)
+      nsig, nbkg, nKstarPsi2S, nKstarJpsi, nKJpsi, notherB, nsig_total =total_fit(tree_cut, args.outputfile, branches, signal_parameters,  otherB_pdf, KstarPsi2S_pdf, KstarJpsi_pdf ,KJpsiee_pdf, comb_parameters, {"min":args.minx,"max":args.maxx},args.partial_ratio, str(args.mva), args.log)
+      print "sig",nsig,"comb", nbkg,"K* Psi2S",  nKstarPsi2S,"K* J/psi", nKstarJpsi,"K J/psi", nKJpsi, "otherB", notherB,"all sig", nsig_total
 
 
 
