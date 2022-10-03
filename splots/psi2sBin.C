@@ -38,10 +38,10 @@ using namespace std;
 // see below for implementation
 void DoSPlot(RooWorkspace*);                         
 void MakePlots(RooWorkspace*);                       
-void MakeHistos(RooWorkspace*, float);
+void MakeHistos(RooWorkspace*, float, int);
 void getDataSet(const char *, RooWorkspace*, float, float, float);   
 
-void psi2sBin(const char* workspacefile, const char* roottreefile, float bdtCut)
+void psi2sBin(const char* workspacefile, const char* roottreefile, float bdtCut, int isPFPF)
 {
   // Define q^2 ranges
   float q2inf = 3.55;
@@ -61,17 +61,21 @@ void psi2sBin(const char* workspacefile, const char* roottreefile, float bdtCut)
   // Add dataset from converted root tree. 
   // Should be identical to the one in the workspace + extra variables needed for splots
   getDataSet(roottreefile, ws, bdtCut, q2inf, q2sup);
+  std::cout << "dataset taken" << std::endl;
 
   // make a new dataset with sWeights added for every event.
   DoSPlot(ws);
+  std::cout << "splots done" << std::endl;
 
   // Make some plots showing the discriminating variable and
   // the control variable after unfolding.
   MakePlots(ws);
+  std::cout << "plots done" << std::endl;
   
   // Save variables in histos
-  MakeHistos(ws, bdtCut);
-  
+  MakeHistos(ws, bdtCut, isPFPF);
+  std::cout << "histos ready" << std::endl;
+
   // cleanup
   delete ws;
 }
@@ -119,8 +123,7 @@ void DoSPlot(RooWorkspace* wspace){
   std::cout << "OtherB model" << std::endl;
   //
   RooRealVar *notherB = wspace->var("notherB");
-  RooRealVar *exp_alpha_otherb = wspace->var("exp_alpha_otherb");  
-  RooAbsPdf  *exp_otherb = wspace->pdf("exp_otherb");
+  RooAbsPdf  *otherb = wspace->pdf("otherb");
 
 
   // --------------------------------------
@@ -165,7 +168,6 @@ void DoSPlot(RooWorkspace* wspace){
   gauss_mean->setConstant();
   gauss_width->setConstant();
   frac->setConstant();
-  exp_alpha_otherb->setConstant();  
   exp_alpha_comb->setConstant();
 
   // Now we use the SPlot class to add SWeights to our data set
@@ -204,7 +206,7 @@ void MakePlots(RooWorkspace* ws){
   // get what we need out of the workspace
   RooAbsPdf* model       = ws->pdf("model");
   RooAbsPdf* signal      = ws->pdf("signal");
-  RooAbsPdf* exp_otherb  = ws->pdf("exp_otherb");
+  RooAbsPdf* otherb      = ws->pdf("otherb");
   RooAbsPdf* exp_comb    = ws->pdf("exp_comb");
   RooAbsPdf* kstarpsi2s  = ws->pdf("kstarpsi2s");
   RooRealVar *x          = ws->var("x");
@@ -225,7 +227,7 @@ void MakePlots(RooWorkspace* ws){
   mydata->plotOn(frame, RooFit::Binning(50)) ;
   model->plotOn(frame, LineColor(kRed)) ;
   model->plotOn(frame, Components(*signal),      Normalization(1.0, RooAbsReal::RelativeExpected), LineColor(4),  LineWidth(2), LineStyle(kDashed));
-  model->plotOn(frame, Components(*exp_otherb),  Normalization(1.0, RooAbsReal::RelativeExpected), LineColor(30), LineWidth(2), LineStyle(kDashed));
+  model->plotOn(frame, Components(*otherb),      Normalization(1.0, RooAbsReal::RelativeExpected), LineColor(30), LineWidth(2), LineStyle(kDashed));
   model->plotOn(frame, Components(*exp_comb),    Normalization(1.0, RooAbsReal::RelativeExpected), LineColor(49), LineWidth(2), LineStyle(kDashed));
   model->plotOn(frame, Components(*kstarpsi2s),  Normalization(1.0, RooAbsReal::RelativeExpected), LineColor(1),  LineWidth(2), LineStyle(kDashed));
   frame->SetTitle("Fit of model to discriminating variable");
@@ -310,7 +312,7 @@ void MakePlots(RooWorkspace* ws){
 
 
 // Control plots
-void MakeHistos(RooWorkspace* ws, float bdtCut){
+void MakeHistos(RooWorkspace* ws, float bdtCut, int isPFPF){
   
   gStyle->SetOptStat(0);
 
@@ -325,6 +327,7 @@ void MakeHistos(RooWorkspace* ws, float bdtCut){
   RooRealVar* Bcos     = ws->var("Bcos");            
   RooRealVar* L1pt     = ws->var("L1pt");         
   RooRealVar* L2pt     = ws->var("L2pt");         
+  RooRealVar* Bpt      = ws->var("Bpt");
   RooRealVar* Kpt      = ws->var("Kpt");          
   RooRealVar* LKdz     = ws->var("LKdz");            
   RooRealVar* L1L2dr   = ws->var("L1L2dr");          
@@ -333,11 +336,10 @@ void MakeHistos(RooWorkspace* ws, float bdtCut){
   RooRealVar* Kiso     = ws->var("Kiso");        
   RooRealVar* Passymetry = ws->var("Passymetry");                
   RooRealVar* Kip3d    = ws->var("Kip3d");         
+  RooRealVar* KLmassD0 = ws->var("KLmassD0");
 
   // note, we get the dataset with sWeights
   RooDataSet* mydata = (RooDataSet*) ws->data("mydataWithSWeights");
-
-  // create weighted data set
   RooDataSet * mydataw_sgn = new RooDataSet(mydata->GetName(),mydata->GetTitle(),mydata,*mydata->get(),0,"nsignal_sw") ;
   mydataw_sgn->Print();
 
@@ -345,22 +347,32 @@ void MakeHistos(RooWorkspace* ws, float bdtCut){
   float theinf = bdtCut-2;
   float thedelta = 15.-theinf;
   int thebin = thedelta/0.5;
-  TH1 *h1_xgb   = mydataw_sgn->createHistogram("h1_xgb",*xgb,Binning(thebin,theinf,15)); 
-  TH1 *h1_L1id  = mydataw_sgn->createHistogram("h1_L1id",*L1id, Binning(33,-4.,7.)); 
-  TH1 *h1_L2id  = mydataw_sgn->createHistogram("h1_L2id",*L2id, Binning(33,-4.,7.)); 
+  // TH1 *h1_xgb   = mydataw_sgn->createHistogram("h1_xgb",*xgb,Binning(thebin,theinf,15)); 
+  TH1 *h1_xgb = mydataw_sgn->createHistogram("h1_xgb",*xgb,Binning(24,3.0,15.)); 
+  TH1 *h1_L1id;
+  TH1 *h1_L2id;
+  if (isPFPF==1) {
+    h1_L1id = mydataw_sgn->createHistogram("h1_L1id",*L1id, Binning(32,-4.,7.)); 
+    h1_L2id = mydataw_sgn->createHistogram("h1_L2id",*L2id, Binning(32,-4.,7.)); 
+  } else {
+    h1_L1id = mydataw_sgn->createHistogram("h1_L1id",*L1id, Binning(40,-4.,16.)); 
+    h1_L2id = mydataw_sgn->createHistogram("h1_L2id",*L2id, Binning(40,-4.,16.)); 
+  }
   TH1 *h1_Bprob = mydataw_sgn->createHistogram("h1_Bprob",*Bprob, Binning(10,0.,1.)); 
   TH1 *h1_BsLxy = mydataw_sgn->createHistogram("h1_BsLxy",*BsLxy, Binning(10,0.,100.)); 
   TH1 *h1_Bcos  = mydataw_sgn->createHistogram("h1_Bcos",*Bcos, Binning(10,0.99,1.)); 
   TH1 *h1_L1pt  = mydataw_sgn->createHistogram("h1_L1pt",*L1pt, Binning(60,0.,30)); 
   TH1 *h1_L2pt  = mydataw_sgn->createHistogram("h1_L2pt",*L2pt, Binning(40,0.,20)); 
+  TH1 *h1_Bpt    = mydataw_sgn->createHistogram("h1_Bpt",*Bpt, Binning(80,0.,80));
   TH1 *h1_Kpt   = mydataw_sgn->createHistogram("h1_Kpt",*Kpt, Binning(40,0.,20)); 
   TH1 *h1_LKdz  = mydataw_sgn->createHistogram("h1_LKdz",*LKdz, Binning(20,0.,1.)); 
   TH1 *h1_L1L2dr = mydataw_sgn->createHistogram("h1_L1L2dr",*L1L2dr, Binning(20,0.,2.)); 
-  TH1 *h1_LKdr  = mydataw_sgn->createHistogram("h1_LKdr",*LKdr, Binning(40,0.,1.)); 
+  TH1 *h1_LKdr  = mydataw_sgn->createHistogram("h1_LKdr",*LKdr, Binning(40,0.,3.)); 
   TH1 *h1_L1iso = mydataw_sgn->createHistogram("h1_L1iso",*L1iso, Binning(30,0.,30.)); 
   TH1 *h1_Kiso  = mydataw_sgn->createHistogram("h1_Kiso",*Kiso, Binning(30,0.,30.)); 
   TH1 *h1_Passymetry = mydataw_sgn->createHistogram("h1_Passymetry",*Passymetry, Binning(20,-1.,1.)); 
-  TH1 *h1_Kip3d = mydataw_sgn->createHistogram("h1_Kip3d",*Kip3d, Binning(40,-0.2,0.2)); 
+  TH1 *h1_Kip3d      = mydataw_sgn->createHistogram("h1_Kip3d",*Kip3d, Binning(14,-0.07,0.07)); 
+  TH1 *h1_KLmassD0   = mydataw_sgn->createHistogram("h1_KLmassD0",*KLmassD0, Binning(30,0.,6.));
 
   TFile myFileSPlots("myFileSPlots.root","RECREATE");
   myFileSPlots.cd();
@@ -372,6 +384,7 @@ void MakeHistos(RooWorkspace* ws, float bdtCut){
   h1_Bcos  -> Write();
   h1_L1pt  -> Write();
   h1_L2pt  -> Write();
+  h1_Bpt -> Write();
   h1_Kpt   -> Write();
   h1_LKdz  -> Write();
   h1_L1L2dr -> Write();
@@ -380,6 +393,7 @@ void MakeHistos(RooWorkspace* ws, float bdtCut){
   h1_Kiso  -> Write();
   h1_Passymetry -> Write();
   h1_Kip3d -> Write();
+  h1_KLmassD0 -> Write();
 }
 
 // Convert ROOT tree in RooDataset
@@ -408,6 +422,7 @@ void getDataSet(const char *rootfile, RooWorkspace *ws, float bdtCut, float q2mi
   RooRealVar Bcos("Bcos","Bcos",-1.,1.,"");         
   RooRealVar L1pt("L1pt","L1pt", 0., 5000.,"");       
   RooRealVar L2pt("L2pt","L2pt", 0., 5000.,"");       
+  RooRealVar Bpt("Bpt","Bpt", 0., 5000.,"");
   RooRealVar Kpt("Kpt","Kpt",   0., 5000.,"");        
   RooRealVar LKdz("LKdz", "LKdz",     0., 50.,"");                 
   RooRealVar L1L2dr("L1L2dr","L1L2dr", 0., 50.,"");                 
@@ -423,6 +438,7 @@ void getDataSet(const char *rootfile, RooWorkspace *ws, float bdtCut, float q2mi
   setall.add(Bcos);
   setall.add(L1pt);
   setall.add(L2pt);
+  setall.add(Bpt);
   setall.add(Kpt);
   setall.add(LKdz);
   setall.add(L1L2dr);
