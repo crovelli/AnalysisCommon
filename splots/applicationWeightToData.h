@@ -22,7 +22,10 @@ public :
    // Fixed size dimensions of array or collections stored in the TTree if any.
 
    // Declaration of leaf types
-   Double_t        weight;
+   Double_t        weightElePt1;
+   Double_t        weightElePt2;
+   Double_t        weightKPt;
+   Double_t        weightElesDr;
    Double_t        xgb;
    Double_t        Bmass;
    Double_t        Mll;
@@ -56,7 +59,10 @@ public :
    Double_t        Mu12_IP6;
 
    // List of branches
-   TBranch        *b_weight;   //!
+   TBranch        *b_weightElePt1;     //!
+   TBranch        *b_weightElePt2;     //!
+   TBranch        *b_weightKPt;     //!
+   TBranch        *b_weightElesDr;     //!
    TBranch        *b_xgb;   //!
    TBranch        *b_Bmass;   //!
    TBranch        *b_Mll;   //!
@@ -108,13 +114,11 @@ applicationWeightToData::applicationWeightToData(TTree *tree) : fChain(0)
   // if parameter tree is not specified (or zero), connect the file
   // used to generate this class and read the Tree.
   if (tree == 0) {
-    //TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0_withEle1PtWeight.root");
-    //TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0_withEle2PtWeight.root");
-    TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0_withElesDrWeight.root");
+    //TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("outputFiles_PFPF_forEffOfBDTonly/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_data_mvaCut0____withWeights.root");
+    TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("outputFiles_PFLP_forEffOfBDTonly/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0____withWeights.root");
     if (!f || !f->IsOpen()) {
-      //f = new TFile("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0_withEle1PtWeight.root");
-      //f = new TFile("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0_withEle2PtWeight.root");
-      f = new TFile("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0_withElesDrWeight.root");
+      //f = new TFile("outputFiles_PFPF_forEffOfBDTonly/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_data_mvaCut0____withWeights.root");
+      f = new TFile("outputFiles_PFLP_forEffOfBDTonly/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_data_mvaCut0____withWeights.root");
     }
     f->GetObject("mytreefit",tree);
     
@@ -164,7 +168,10 @@ void applicationWeightToData::Init(TTree *tree)
    fCurrent = -1;
    fChain->SetMakeClass(1);
 
-   fChain->SetBranchAddress("weight", &weight, &b_weight);
+   fChain->SetBranchAddress("weightElePt1", &weightElePt1, &b_weightElePt1);  
+   fChain->SetBranchAddress("weightElePt2", &weightElePt2, &b_weightElePt2);  
+   fChain->SetBranchAddress("weightKPt", &weightKPt, &b_weightKPt);  
+   fChain->SetBranchAddress("weightElesDr", &weightElesDr, &b_weightElesDr);
    fChain->SetBranchAddress("xgb", &xgb, &b_xgb);
    fChain->SetBranchAddress("Bmass", &Bmass, &b_Bmass);
    fChain->SetBranchAddress("Mll", &Mll, &b_Mll);
