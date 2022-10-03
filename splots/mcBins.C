@@ -109,7 +109,7 @@ void drawTH1pair(TH1* h1, TH1* h2,
   pad2->cd();
 
   frame->Reset("ICES");
-  frame->GetYaxis()->SetRangeUser(0.,4.);
+  frame->GetYaxis()->SetRangeUser(0.5,1.5);
   frame->GetYaxis()->SetNdivisions(5);
   frame->GetYaxis()->SetTitle(ratioPadYaxisName.c_str());
   frame->GetYaxis()->SetTitleOffset(1.2);
@@ -158,26 +158,21 @@ void drawTH1pair(TH1* h1, TH1* h2,
 void mcBins() {
 
   // Input files    
-  TFile *fileJpsi  = new TFile("mcForBinRatio_PFPF_JPsiBin__noAntiD0cut__wp0.0.root");
-  TFile *fileLowQ2 = new TFile("mcForBinRatio_PFPF_LowQ2Bin__noAntiD0cut__wp0.0.root");
-  // TFile *filePsi2s = new TFile("mcForBinRatio_PFPF_Psi2sBin__wp0.0.root");
+  TFile *fileJpsi  = new TFile("mcForBinRatio_PFLP_JPsiBin__withAntiD0cut__wp0.0.root");
+  TFile *fileLowQ2 = new TFile("mcForBinRatio_PFLP_LowQ2Bin__withAntiD0cut__wp0.0.root");
   
   // Histos 
   TH1F *h1jpsi_xgb  = (TH1F*)fileJpsi ->Get("h1mc_xgb");
   TH1F *h1lowq2_xgb = (TH1F*)fileLowQ2->Get("h1mc_xgb");
-  // TH1F *h1psi2s_xgb = (TH1F*)filePsi2s->Get("h1mc_xgb");
   //
   TH1F *h1jpsi_mll  = (TH1F*)fileJpsi ->Get("h1mc_mll");
   TH1F *h1lowq2_mll = (TH1F*)fileLowQ2->Get("h1mc_mll");
-  // TH1F *h1psi2s_mll = (TH1F*)filePsi2s->Get("h1mc_mll");
   //
   TH1F *h1jpsi_Bpt  = (TH1F*)fileJpsi ->Get("h1mc_Bpt");
   TH1F *h1lowq2_Bpt = (TH1F*)fileLowQ2->Get("h1mc_Bpt");
-  //TH1F *h1psi2s_Bpt = (TH1F*)filePsi2s->Get("h1mc_Bpt");
   //
   TH1F *h1jpsi_KLmassD0  = (TH1F*)fileJpsi ->Get("h1mc_KLmassD0");
   TH1F *h1lowq2_KLmassD0 = (TH1F*)fileLowQ2->Get("h1mc_KLmassD0");
-  //TH1F *h1psi2s_KLmassD0 = (TH1F*)filePsi2s->Get("h1mc_KLmassD0");
   //
   TH1F *h1jpsi_Ele1pt   = (TH1F*)fileJpsi  ->Get("h1mc_Ele1pt");  
   TH1F *h1lowq2_Ele1pt  = (TH1F*)fileLowQ2 ->Get("h1mc_Ele1pt");  
@@ -187,6 +182,10 @@ void mcBins() {
   //
   TH1F *h1jpsi_ElesDr   = (TH1F*)fileJpsi  ->Get("h1mc_ElesDr");  
   TH1F *h1lowq2_ElesDr  = (TH1F*)fileLowQ2 ->Get("h1mc_ElesDr");  
+  //
+  TH1F *h1jpsi_Kpt   = (TH1F*)fileJpsi  ->Get("h1mc_Kpt");  
+  TH1F *h1lowq2_Kpt  = (TH1F*)fileLowQ2 ->Get("h1mc_Kpt");  
+  //
 
 
   // Rebin
@@ -196,25 +195,26 @@ void mcBins() {
   h1lowq2_Ele1pt->Rebin(4);   
   h1jpsi_Ele2pt->Rebin(2);   
   h1lowq2_Ele2pt->Rebin(2);   
+  h1jpsi_Kpt->Rebin(2);   
+  h1lowq2_Kpt->Rebin(2);   
 
   // Plots
   gROOT->SetStyle("Plain");
   gStyle->SetOptStat(0);
   // 
   drawTH1pair(h1jpsi_xgb,   h1lowq2_xgb,  "BDT-JPsiToLowQ2",  "a.u.",  1.,"bdt-JPsiToLowQ2",  "./",2, 0, "JPsi","LowQ2");
-  //drawTH1pair(h1jpsi_xgb,   h1psi2s_xgb,  "BDT-JPsiToPsi2s",  "a.u.",  1.,"bdt-JPsiToPsi2s",  "./",4, 0, "JPsi","Psi2s");
   //
   drawTH1pair(h1jpsi_mll,   h1lowq2_mll,  "Mll-JPsiToLowQ2",  "a.u.",  1.,"mll-JPsiToLowQ2",  "./",2, 0, "JPsi","LowQ2");
-  //drawTH1pair(h1jpsi_mll,   h1psi2s_mll,  "Mll-JPsiToPsi2s",  "a.u.",  1.,"mll-JPsiToPsi2s",  "./",4, 0, "JPsi","Psi2s");
   //
   drawTH1pair(h1jpsi_Bpt,   h1lowq2_Bpt,  "Bpt-JPsiToLowQ2",  "a.u.",  1.,"Bpt-JPsiToLowQ2",  "./",2, 0, "JPsi","LowQ2");
-  //drawTH1pair(h1jpsi_Bpt,   h1psi2s_Bpt,  "Bpt-JPsiToPsi2s",  "a.u.",  1.,"Bpt-JPsiToPsi2s",  "./",4, 0, "JPsi","Psi2s");
   //
   drawTH1pair(h1jpsi_KLmassD0,   h1lowq2_KLmassD0,  "KLmassD0-JPsiToLowQ2",  "a.u.",  1.,"KLmassD0-JPsiToLowQ2",  "./",2, 0, "JPsi","LowQ2");
-  //drawTH1pair(h1jpsi_KLmassD0,   h1psi2s_KLmassD0,  "KLmassD0-JPsiToPsi2s",  "a.u.",  1.,"KLmassD0-JPsiToPsi2s",  "./",4, 0, "JPsi","Psi2s");
-
+  //
   drawTH1pair(h1jpsi_Ele1pt,  h1lowq2_Ele1pt,  "Ele1Pt-JPsiToLowQ2",  "a.u.",  1.,"Ele1Pt-JPsiToLowQ2",  "./",2, 0, "JPsi","LowQ2");
+  //
   drawTH1pair(h1jpsi_Ele2pt,  h1lowq2_Ele2pt,  "Ele2Pt-JPsiToLowQ2",  "a.u.",  1.,"Ele2Pt-JPsiToLowQ2",  "./",2, 0, "JPsi","LowQ2");
+  //
   drawTH1pair(h1jpsi_ElesDr,  h1lowq2_ElesDr,  "ElesDr-JPsiToLowQ2",  "a.u.",  1.,"ElesDr-JPsiToLowQ2",  "./",2, 0, "JPsi","LowQ2");
-
+  //
+  drawTH1pair(h1jpsi_Kpt,  h1lowq2_Kpt,  "KPt-JPsiToLowQ2",  "a.u.",  1.,"KPt-JPsiToLowQ2",  "./",2, 0, "JPsi","LowQ2");
 }
