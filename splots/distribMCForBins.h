@@ -104,20 +104,24 @@ distribMCForBins::distribMCForBins(TTree *tree) : fChain(0)
   // if parameter tree is not specified (or zero), connect the file
   // used to generate this class and read the Tree.
   if (tree == 0) {          
-    TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MCres.root");          // JPsi   PFPF
-    //TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MC.root");             // Low-q2 PFPF
-    //TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MCPsi2S.root");        // Psi2s  PFPF
+    // JPsi   PFPF
+    //TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("otto_mergedFiles/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MCres.root");         
     //
-    //TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_ALL_MCres.root");       // JPsi PFLP
-    //TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_ALL_MC.root");          // Low-q2 PFLP  
+    // Low-q2 PFPF     
+    // TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("otto_mergedFiles/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MC.root");     
+    //
+    // JPsi PFLP
+    //TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("otto_mergedFiles/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_ALL_MCres.root");      
+    //
+    // Low-q2 PFLP
+    TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("otto_mergedFiles/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_ALL_MC.root");        
 
     if (!f || !f->IsOpen()) {
-      f = new TFile("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MCres.root");          // JPsi PFPF   
-      //f = new TFile("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MC.root");             // Low-q2 PFPF     
-      //f = new TFile("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MCPsi2S.root");        // Psi2s  PFPF   
+      //f = new TFile("otto_mergedFiles/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MCres.root");          // JPsi PFPF   
+      //f = new TFile("otto_mergedFiles/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MC.root");             // Low-q2 PFPF     
       //
-      //f = new TFile("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_ALL_MCres.root");   // JPsi PFLP  
-      //f = new TFile("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_ALL_MC.root");      // Low-q2 PFLP      
+      //f = new TFile("otto_mergedFiles/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_ALL_MCres.root");   // JPsi PFLP  
+      f = new TFile("otto_mergedFiles/forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_ALL_MC.root");      // Low-q2 PFLP      
     }
     f->GetObject("mytreefit",tree);
     
