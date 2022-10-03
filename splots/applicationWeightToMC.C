@@ -177,15 +177,15 @@ void applicationWeightToMC::Loop(int theVariable)
   float denominator_wwelesdr = 0.;
 
   // File with Ratios
-  TFile *ratioFileMCBins = new TFile("JPsiToLowQ2BinRatio__PFPF_withAntiD0cut__wp0.0.root");      // ratio = JPsi / LowQ2
+  TFile *ratioFileMCBins = new TFile("JPsiToLowQ2BinRatio__PFLP_withAntiD0cut__wp0.0.root");      // ratio = JPsi / LowQ2
   TH1F *ratioEle1pt_fromFile = (TH1F*)ratioFileMCBins->Get("ratio_Ele1Pt-JPsiToLowQ2");
   TH1F *ratioEle2pt_fromFile = (TH1F*)ratioFileMCBins->Get("ratio_Ele2Pt-JPsiToLowQ2");
   TH1F *ratioKpt_fromFile    = (TH1F*)ratioFileMCBins->Get("ratio_KPt-JPsiToLowQ2");
   TH1F *ratioElesDr_fromFile = (TH1F*)ratioFileMCBins->Get("ratio_ElesDr-JPsiToLowQ2");
   
   // Files with MC distributions
-  TFile *mcJPsiBinFile  = new TFile("mcForBinRatio_PFPF_JPsiBin__withAntiD0cut__wp0.0.root");
-  TFile *mcLowQ2BinFile = new TFile("mcForBinRatio_PFPF_LowQ2Bin__withAntiD0cut__wp0.0.root");
+  TFile *mcJPsiBinFile  = new TFile("mcForBinRatio_PFLP_JPsiBin__withAntiD0cut__wp0.0.root");
+  TFile *mcLowQ2BinFile = new TFile("mcForBinRatio_PFLP_LowQ2Bin__withAntiD0cut__wp0.0.root");
 
   // Histos with MC distributions 
   TH1F *mcJPsiEle1pt_fromFile    = (TH1F*)mcJPsiBinFile ->Get("h1mc_Ele1pt");
@@ -275,7 +275,7 @@ void applicationWeightToMC::Loop(int theVariable)
     denominator_wwelesdr  = denominator_wwelesdr+weightElesDr;
 
     // To compute efficiencies: numerator
-    if (xgb<8.3) continue;
+    if (xgb<8.6) continue;
     if (KLmassD0<2.0) continue;
     numerator_now = numerator_now+1;
     numerator_wwele1pt  = numerator_wwele1pt+weightElePt1;
