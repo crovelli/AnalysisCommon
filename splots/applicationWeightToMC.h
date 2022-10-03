@@ -114,9 +114,11 @@ applicationWeightToMC::applicationWeightToMC(TTree *tree) : fChain(0)
   // if parameter tree is not specified (or zero), connect the file
   // used to generate this class and read the Tree.
   if (tree == 0) {
-    TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MCres____withWeights.root");
+    //TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MCres____withWeights.root");
+    TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_ALL_MCres____withWeights.root");
     if (!f || !f->IsOpen()) {
-      f = new TFile("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MCres____withWeights.root");
+      //f = new TFile("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_PFe_v7.3_nonreg_ottoCut_ALL_MCres____withWeights.root");
+      f = new TFile("forMeas_xgbmodel_kee_12B_kee_correct_pu_Depth17_LowPtPF_v7.3_nonreg_ALL_MCres____withWeights.root");
     }
     f->GetObject("mytreefit",tree);
     
